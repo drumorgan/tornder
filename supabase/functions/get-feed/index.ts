@@ -32,6 +32,13 @@ serve(async (req) => {
       )
     }
 
+    // Look up viewer's flags to determine their role for category-specific filtering
+    const { data: viewerFlags } = await supabase
+      .from('flags')
+      .select('is_director, company_hiring, seeking_job, has_island, island_open, seeking_island')
+      .eq('torn_player_id', viewer_id)
+      .single()
+
     // Fetch all players with matching opt-in flags (everyone is visible)
     let feedQuery = supabase
       .from('players')
@@ -55,10 +62,20 @@ serve(async (req) => {
         feedQuery = feedQuery.eq('flags.seeking_marriage', true)
         break
       case 'island':
-        feedQuery = feedQuery.or('island_open.eq.true,seeking_island.eq.true', { referencedTable: 'flags' })
+        // Island owners with open spots see seekers; seekers see open islands
+        if (viewerFlags?.island_open) {
+          feedQuery = feedQuery.eq('flags.seeking_island', true)
+        } else {
+          feedQuery = feedQuery.eq('flags.island_open', true)
+        }
         break
       case 'company':
-        feedQuery = feedQuery.or('company_hiring.eq.true,seeking_job.eq.true', { referencedTable: 'flags' })
+        // Directors who are hiring see job seekers; job seekers see hiring companies
+        if (viewerFlags?.is_director) {
+          feedQuery = feedQuery.eq('flags.seeking_job', true)
+        } else {
+          feedQuery = feedQuery.eq('flags.company_hiring', true)
+        }
         break
     }
 
