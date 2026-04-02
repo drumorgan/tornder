@@ -54,6 +54,16 @@ html, body {
   margin-top: 0.1rem;
 }
 
+.giro-link {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.giro-link:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
 #main-nav {
   display: flex;
   gap: 0.5rem;
@@ -301,6 +311,77 @@ html, body {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-top: 0.2rem;
+}
+
+.stat-clickable {
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.stat-clickable:hover {
+  border-color: var(--accent);
+}
+
+/* === Stat List Overlay === */
+.stat-list-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: fadeIn 0.3s ease;
+}
+
+.stat-list-content {
+  background: var(--bg-card);
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  width: 90%;
+  max-width: 360px;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-list-content h3 {
+  color: var(--accent);
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.stat-list {
+  list-style: none;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.stat-list li {
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.stat-list-player {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.stat-list-player:hover {
+  color: var(--accent);
+}
+
+.avatar-sm {
+  width: 32px;
+  height: 32px;
+  font-size: 0.85rem;
+}
+
+.stat-list-close {
+  margin-top: 1rem;
 }
 
 .toggle-hint {
@@ -664,31 +745,6 @@ html, body {
 .toast-info {
   background: #2980b9;
   color: white;
-}
-
-/* === Footer === */
-.app-footer {
-  text-align: center;
-  padding: 1.5rem 1rem;
-  border-top: 1px solid rgba(255,255,255,0.1);
-  font-size: 0.8rem;
-  color: var(--text-muted);
-}
-
-.footer-links {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-top: 0.4rem;
-}
-
-.footer-links a {
-  color: var(--accent);
-  text-decoration: none;
-}
-
-.footer-links a:hover {
-  text-decoration: underline;
 }
 
 /* === Animations === */

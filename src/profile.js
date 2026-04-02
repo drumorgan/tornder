@@ -60,15 +60,15 @@ export async function renderProfile(container) {
           </div>
         </div>
         <div class="stat-bar">
-          <div class="stat-item">
+          <div class="stat-item stat-clickable" data-stat="matches">
             <span class="stat-value">${matchCount}</span>
             <span class="stat-label">MATCHES</span>
           </div>
-          <div class="stat-item">
+          <div class="stat-item stat-clickable" data-stat="received">
             <span class="stat-value">${receivedCount || 0}</span>
             <span class="stat-label">INTERESTED IN YOU</span>
           </div>
-          <div class="stat-item">
+          <div class="stat-item stat-clickable" data-stat="sent">
             <span class="stat-value">${sentCount || 0}</span>
             <span class="stat-label">INTERESTS SENT</span>
           </div>
@@ -111,6 +111,91 @@ export async function renderProfile(container) {
 
   // Refresh button
   document.getElementById('refresh-btn').addEventListener('click', () => handleRefresh(playerId));
+
+  // Stat click handlers
+  container.querySelectorAll('.stat-clickable').forEach(item => {
+    item.addEventListener('click', () => showStatList(item.dataset.stat, playerId));
+  });
+}
+
+async function showStatList(stat, playerId) {
+  let title = '';
+  let playerIds = [];
+
+  if (stat === 'matches') {
+    title = 'Your Matches';
+    // Find mutual: I liked them AND they liked me
+    const { data: sent } = await supabase
+      .from('interests')
+      .select('to_player_id')
+      .eq('from_player_id', playerId);
+    if (sent && sent.length > 0) {
+      const targets = sent.map(r => r.to_player_id);
+      const { data: mutual } = await supabase
+        .from('interests')
+        .select('from_player_id')
+        .eq('to_player_id', playerId)
+        .in('from_player_id', targets);
+      playerIds = (mutual || []).map(r => r.from_player_id);
+    }
+  } else if (stat === 'received') {
+    title = 'Interested in You';
+    const { data } = await supabase
+      .from('interests')
+      .select('from_player_id')
+      .eq('to_player_id', playerId);
+    playerIds = (data || []).map(r => r.from_player_id);
+  } else if (stat === 'sent') {
+    title = 'Interests Sent';
+    const { data } = await supabase
+      .from('interests')
+      .select('to_player_id')
+      .eq('from_player_id', playerId);
+    playerIds = (data || []).map(r => r.to_player_id);
+  }
+
+  // Deduplicate
+  playerIds = [...new Set(playerIds)];
+
+  if (playerIds.length === 0) {
+    showToast(`No ${title.toLowerCase()} yet`);
+    return;
+  }
+
+  // Fetch player names
+  const { data: players } = await supabase
+    .from('players')
+    .select('torn_player_id, name')
+    .in('torn_player_id', playerIds);
+
+  // Show overlay
+  const existing = document.querySelector('.stat-list-overlay');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.className = 'stat-list-overlay';
+  overlay.innerHTML = `
+    <div class="stat-list-content">
+      <h3>${title}</h3>
+      <ul class="stat-list">
+        ${(players || []).map(p => `
+          <li>
+            <a href="https://www.torn.com/profiles.php?XID=${p.torn_player_id}" target="_blank" rel="noopener" class="stat-list-player">
+              <span class="avatar avatar-sm">${(p.name || '?')[0].toUpperCase()}</span>
+              ${escapeHtml(p.name)}
+            </a>
+          </li>
+        `).join('')}
+      </ul>
+      <button class="btn btn-secondary stat-list-close">Close</button>
+    </div>
+  `;
+
+  document.getElementById('app').appendChild(overlay);
+  overlay.querySelector('.stat-list-close').addEventListener('click', () => overlay.remove());
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.remove();
+  });
 }
 
 function renderToggle(field, label, value, enabled, icon) {
