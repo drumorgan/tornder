@@ -28,11 +28,9 @@ html, body {
 }
 
 #app {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
   max-width: 480px;
   margin: 0 auto;
+  min-height: 100%;
 }
 
 /* === Header === */
@@ -104,8 +102,6 @@ html, body {
 
 /* === Screen Container === */
 #screen-container {
-  flex: 1;
-  overflow-y: auto;
   padding: 1rem;
 }
 
