@@ -22,11 +22,11 @@ export function renderLogin(container) {
         <div class="tos-grid">
           <div>
             <p class="tos-heading">DATA STORAGE</p>
-            <p>Player name, ID, level, faction, company, and property status stored until you log out</p>
+            <p>Player name, ID, level, age, faction, company, working stats, marriage &amp; property status stored until you delete your data</p>
           </div>
           <div>
             <p class="tos-heading">DATA SHARING</p>
-            <p>Your name, level, faction, and company are shown to other Tornder users when you opt in</p>
+            <p>Your name, level, age, faction, company, and working stats are shown to other Tornder users when you opt in</p>
           </div>
           <div>
             <p class="tos-heading">KEY STORAGE</p>
@@ -34,7 +34,7 @@ export function renderLogin(container) {
           </div>
           <div>
             <p class="tos-heading">KEY ACCESS LEVEL</p>
-            <p>Custom: user &rarr; basic, profile, properties</p>
+            <p>Custom: user &rarr; basic, profile, properties, workstats</p>
           </div>
         </div>
       </div>
