@@ -14,7 +14,7 @@ export function renderLogin(container) {
           <input type="text" id="api-key-input" placeholder="Paste your API key" autocomplete="off" />
         </div>
         <button id="login-btn" class="btn btn-primary">Enter</button>
-        <p class="key-disclaimer">Need a key? <a href="https://www.torn.com/preferences.php#tab=api?step=addNewKey&user=basic,profile,properties&title=Tornder" target="_blank" rel="noopener">Click here to create a Custom Key</a> &mdash; it only shares your name, faction, company, and property info. Your key is stored so you stay logged in. You can revoke it anytime from your <a href="https://www.torn.com/preferences.php#tab=api" target="_blank" rel="noopener">Torn API settings</a>.</p>
+        <p class="key-disclaimer">Need a key? <a href="https://www.torn.com/preferences.php#tab=api?step=addNewKey&user=basic,profile,properties,workstats&title=Tornder" target="_blank" rel="noopener">Click here to create a Custom Key</a> &mdash; it only shares your name, faction, company, property, and work stats info. Your key is stored so you stay logged in. You can revoke it anytime from your <a href="https://www.torn.com/preferences.php#tab=api" target="_blank" rel="noopener">Torn API settings</a>.</p>
       </div>
 
       <div class="tos-box">
@@ -68,7 +68,7 @@ async function handleLogin(key) {
   // Step 1: Verify key and get user data
   const userData = await callTornApi({
     section: 'user',
-    selections: 'basic,profile,properties',
+    selections: 'basic,profile,properties,workstats',
     key,
   });
 
@@ -104,6 +104,9 @@ async function handleLogin(key) {
       company_role: userData.job?.job || null,
       company_type: userData.job?.company_type || null,
       level: userData.level || null,
+      manual_labor: userData.manual_labor || null,
+      intelligence: userData.intelligence || null,
+      endurance: userData.endurance || null,
       api_key: key,
       last_verified: new Date().toISOString(),
     }, { onConflict: 'torn_player_id' });

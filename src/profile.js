@@ -82,6 +82,25 @@ export async function renderProfile(container) {
           <p>Property: <strong>${flags.has_island ? 'Private Island' : 'Other'}</strong></p>
         </div>
 
+        ${player.manual_labor || player.intelligence || player.endurance ? `
+        <hr />
+        <h3>Working Stats</h3>
+        <div class="workstats-bar">
+          <div class="workstat-item">
+            <span class="workstat-value">${Number(player.manual_labor || 0).toLocaleString()}</span>
+            <span class="workstat-label">Manual Labor</span>
+          </div>
+          <div class="workstat-item">
+            <span class="workstat-value">${Number(player.intelligence || 0).toLocaleString()}</span>
+            <span class="workstat-label">Intelligence</span>
+          </div>
+          <div class="workstat-item">
+            <span class="workstat-value">${Number(player.endurance || 0).toLocaleString()}</span>
+            <span class="workstat-label">Endurance</span>
+          </div>
+        </div>
+        ` : ''}
+
         <hr />
 
         <h3>Opt-in Flags</h3>
@@ -235,7 +254,7 @@ async function showReceivedDeck(playerId) {
     .select(`
       torn_player_id, name, faction_id, faction_name,
       company_id, company_name, company_role, company_type,
-      level, age,
+      level, age, manual_labor, intelligence, endurance,
       flags (
         is_single, seeking_marriage,
         has_island, island_open, seeking_island,
@@ -405,7 +424,7 @@ async function handleRefresh(playerId) {
 
   const userData = await callTornApi({
     section: 'user',
-    selections: 'basic,profile,properties',
+    selections: 'basic,profile,properties,workstats',
     player_id: playerId,
   });
 
@@ -428,7 +447,9 @@ async function handleRefresh(playerId) {
     company_role: userData.job?.job || null,
     company_type: userData.job?.company_type || null,
     level: userData.level || null,
-    age: userData.age || null,
+    manual_labor: userData.manual_labor || null,
+    intelligence: userData.intelligence || null,
+    endurance: userData.endurance || null,
     last_verified: new Date().toISOString(),
   }).eq('torn_player_id', playerId);
 
