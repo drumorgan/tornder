@@ -41,8 +41,8 @@ export async function renderProfile(container) {
           </div>
         </div>
         <div class="profile-info">
-          ${player.faction_name ? `<p>Faction: <strong>${escapeHtml(player.faction_name)}</strong></p>` : '<p>No faction</p>'}
-          ${player.company_name ? `<p>Company: <strong>${escapeHtml(player.company_name)}</strong> (${escapeHtml(player.company_role || '')})</p>` : '<p>No company</p>'}
+          ${player.faction_name ? `<p>Faction: <a href="https://www.torn.com/factions.php?step=profile&ID=${player.faction_id}" target="_blank" rel="noopener" class="info-link">${escapeHtml(player.faction_name)}</a></p>` : '<p>No faction</p>'}
+          ${player.company_name ? `<p>Company: <a href="https://www.torn.com/joblist.php#/p=corpinfo&ID=${player.company_id}" target="_blank" rel="noopener" class="info-link">${escapeHtml(player.company_name)}</a> (${escapeHtml(player.company_role || '')})</p>` : '<p>No company</p>'}
           <p>Marriage: <strong>${flags.is_single ? 'Single' : 'Married'}</strong></p>
           <p>Property: <strong>${flags.has_island ? 'Private Island' : 'Other'}</strong></p>
         </div>

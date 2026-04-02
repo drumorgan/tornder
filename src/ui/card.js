@@ -34,8 +34,8 @@ export function createCard(player, category) {
       </div>
     </div>
     <div class="card-body">
-      ${player.faction_name ? `<p class="card-faction">Faction: ${escapeHtml(player.faction_name)}</p>` : ''}
-      ${player.company_name ? `<p class="card-company">${escapeHtml(player.company_name)}${companyTypeName ? ` <span class="card-company-type">(${companyTypeName})</span>` : ''}${player.company_role ? ` &mdash; ${escapeHtml(player.company_role)}` : ''}</p>` : ''}
+      ${player.faction_name ? `<p class="card-faction">Faction: <a href="https://www.torn.com/factions.php?step=profile&ID=${player.faction_id}" target="_blank" rel="noopener" class="info-link">${escapeHtml(player.faction_name)}</a></p>` : ''}
+      ${player.company_name ? `<p class="card-company"><a href="https://www.torn.com/joblist.php#/p=corpinfo&ID=${player.company_id}" target="_blank" rel="noopener" class="info-link">${escapeHtml(player.company_name)}</a>${companyTypeName ? ` <span class="card-company-type">(${companyTypeName})</span>` : ''}${player.company_role ? ` &mdash; ${escapeHtml(player.company_role)}` : ''}</p>` : ''}
       <p class="card-detail">${detail}</p>
     </div>
     <div class="card-footer">
@@ -43,9 +43,9 @@ export function createCard(player, category) {
     </div>
   `;
 
-  // Tap to open Torn profile
+  // Tap to open Torn profile (but not when tapping a link)
   card.addEventListener('click', (e) => {
-    // Don't trigger on swipe
+    if (e.target.closest('a')) return;
     if (card.style.transform && card.style.transform !== 'none') return;
     window.open(`https://www.torn.com/profiles.php?XID=${player.torn_player_id}`, '_blank');
   });

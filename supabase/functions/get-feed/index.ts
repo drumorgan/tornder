@@ -36,8 +36,8 @@ serve(async (req) => {
     let feedQuery = supabase
       .from('players')
       .select(`
-        torn_player_id, name, faction_name,
-        company_name, company_role, company_type,
+        torn_player_id, name, faction_id, faction_name,
+        company_id, company_name, company_role, company_type,
         flags!inner (
           is_single, seeking_marriage,
           has_island, island_open, seeking_island,
