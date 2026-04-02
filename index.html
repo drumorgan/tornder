@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Tornder</title>
+  <link rel="stylesheet" href="/src/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <header id="app-header">
+      <h1 class="logo">Tornder</h1>
+      <nav id="main-nav" class="hidden">
+        <button data-screen="profile" class="nav-btn active">My Profile</button>
+        <button data-screen="browse" class="nav-btn">Browse</button>
+        <button id="logout-btn" class="nav-btn nav-logout">Logout</button>
+      </nav>
+    </header>
+    <main id="screen-container"></main>
+  </div>
+  <div id="toast-container"></div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
