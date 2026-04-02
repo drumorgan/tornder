@@ -3,22 +3,84 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Tornder</title>
-  <link rel="stylesheet" href="/src/styles.css" />
+  <title>Tornder - Connection Test</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #1a1a2e; color: #eee; font-family: sans-serif; padding: 2rem; }
+    h1 { color: #e94560; margin-bottom: 1rem; }
+    .test-box { background: #16213e; padding: 1.5rem; border-radius: 12px; max-width: 400px; margin: 2rem auto; }
+    input { width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: #0f3460; color: #eee; font-size: 1rem; margin-bottom: 0.75rem; }
+    button { width: 100%; padding: 0.75rem; border-radius: 8px; border: none; background: #e94560; color: white; font-size: 1rem; cursor: pointer; margin-bottom: 0.5rem; }
+    button:hover { background: #ff6b81; }
+    #result { margin-top: 1rem; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 8px; white-space: pre-wrap; font-family: monospace; font-size: 0.85rem; min-height: 3rem; }
+    .success { color: #2ecc71; }
+    .error { color: #e74c3c; }
+  </style>
 </head>
 <body>
-  <div id="app">
-    <header id="app-header">
-      <h1 class="logo">Tornder</h1>
-      <nav id="main-nav" class="hidden">
-        <button data-screen="profile" class="nav-btn active">My Profile</button>
-        <button data-screen="browse" class="nav-btn">Browse</button>
-        <button id="logout-btn" class="nav-btn nav-logout">Logout</button>
-      </nav>
-    </header>
-    <main id="screen-container"></main>
+  <div class="test-box">
+    <h1>Tornder</h1>
+    <p style="color:#999;margin-bottom:1.5rem;">Supabase Connection Test</p>
+
+    <input type="text" id="name-input" placeholder="Enter a test player name" />
+    <button id="write-btn">Write to Supabase</button>
+    <button id="read-btn">Read from Supabase</button>
+    <button id="clean-btn" style="background:#555;">Clean up test data</button>
+
+    <div id="result">Results will appear here...</div>
   </div>
-  <div id="toast-container"></div>
-  <script type="module" src="/src/main.js"></script>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const supabase = createClient(
+      'https://luvsehifznunycoggeye.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1dnNlaGlmem51bnljb2dnZXllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwODY2MzcsImV4cCI6MjA5MDY2MjYzN30.kIAxtZ-ykd6pNd2NaaM_4ErNg0IsYaRUoeYp6RXfrpg'
+    );
+
+    const result = document.getElementById('result');
+
+    function show(msg, type) {
+      result.className = type || '';
+      result.textContent = msg;
+    }
+
+    document.getElementById('write-btn').addEventListener('click', async () => {
+      const name = document.getElementById('name-input').value.trim();
+      if (!name) { show('Enter a name first', 'error'); return; }
+
+      show('Writing...');
+      const { data, error } = await supabase
+        .from('players')
+        .upsert({ torn_player_id: 99999, name: name }, { onConflict: 'torn_player_id' })
+        .select();
+
+      if (error) show('WRITE ERROR: ' + error.message, 'error');
+      else show('WRITE OK:\n' + JSON.stringify(data, null, 2), 'success');
+    });
+
+    document.getElementById('read-btn').addEventListener('click', async () => {
+      show('Reading...');
+      const { data, error } = await supabase
+        .from('players')
+        .select('*')
+        .eq('torn_player_id', 99999);
+
+      if (error) show('READ ERROR: ' + error.message, 'error');
+      else if (!data.length) show('No test data found. Write something first.', 'error');
+      else show('READ OK:\n' + JSON.stringify(data, null, 2), 'success');
+    });
+
+    document.getElementById('clean-btn').addEventListener('click', async () => {
+      show('Deleting...');
+      const { error } = await supabase
+        .from('players')
+        .delete()
+        .eq('torn_player_id', 99999);
+
+      if (error) show('DELETE ERROR: ' + error.message + '\n(You may need a DELETE policy)', 'error');
+      else show('Test data cleaned up!', 'success');
+    });
+  </script>
 </body>
 </html>
