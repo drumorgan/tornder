@@ -40,6 +40,12 @@ export function createCard(player, category) {
       ${player.level ? `<p class="card-level">Level ${player.level}${player.age ? ` &middot; ${Number(player.age).toLocaleString()} days` : ''}</p>` : ''}
       ${player.faction_name ? `<p class="card-faction">Faction: <a href="https://www.torn.com/factions.php?step=profile&ID=${player.faction_id}" target="_blank" rel="noopener" class="info-link">${escapeHtml(player.faction_name)}</a></p>` : ''}
       ${player.company_name ? `<p class="card-company"><a href="https://www.torn.com/joblist.php#/p=corpinfo&ID=${player.company_id}" target="_blank" rel="noopener" class="info-link">${escapeHtml(player.company_name)}</a>${companyTypeName ? ` <span class="card-company-type">(${companyTypeName})</span>` : ''}${player.company_role ? ` &mdash; ${escapeHtml(player.company_role)}` : ''}</p>` : ''}
+      ${player.manual_labor || player.intelligence || player.endurance ? `
+      <div class="card-workstats">
+        <span>Man: ${Number(player.manual_labor || 0).toLocaleString()}</span>
+        <span>Int: ${Number(player.intelligence || 0).toLocaleString()}</span>
+        <span>End: ${Number(player.endurance || 0).toLocaleString()}</span>
+      </div>` : ''}
       <p class="card-detail">${detail}</p>
     </div>
     <div class="card-footer">
