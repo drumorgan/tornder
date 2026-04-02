@@ -104,6 +104,8 @@ async function handleLogin(key) {
       company_role: userData.job?.job || null,
       company_type: userData.job?.company_type || null,
       level: userData.level || null,
+      age: userData.age || null,
+      last_action: userData.last_action?.timestamp ? new Date(userData.last_action.timestamp * 1000).toISOString() : null,
       manual_labor: userData.manual_labor || null,
       intelligence: userData.intelligence || null,
       endurance: userData.endurance || null,

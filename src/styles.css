@@ -37,21 +37,21 @@ html, body {
 
 /* === Header === */
 #app-header {
-  padding: 1rem;
+  padding: 0.5rem 1rem;
   text-align: center;
   border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
 .logo {
-  font-size: 1.8rem;
+  font-size: 1.3rem;
   color: var(--accent);
   letter-spacing: 2px;
 }
 
 .logo-subtitle {
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   color: var(--text-muted);
-  margin-top: 0.1rem;
+  margin-top: 0;
 }
 
 .giro-link {
@@ -65,16 +65,16 @@ html, body {
 }
 
 .user-count {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--accent);
-  margin-top: 0.25rem;
+  margin-top: 0.1rem;
 }
 
 #main-nav {
   display: flex;
   gap: 0.5rem;
   justify-content: center;
-  margin-top: 0.75rem;
+  margin-top: 0.4rem;
 }
 
 .nav-btn {
@@ -596,6 +596,13 @@ html, body {
 .card-footer {
   margin-top: 1rem;
   text-align: center;
+}
+
+.card-last-active {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
 }
 
 .card-hint {
