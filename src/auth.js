@@ -104,7 +104,6 @@ async function handleLogin(key) {
       company_role: userData.job?.job || null,
       company_type: userData.job?.company_type || null,
       level: userData.level || null,
-      age: userData.age || null,
       api_key: key,
       last_verified: new Date().toISOString(),
     }, { onConflict: 'torn_player_id' });
