@@ -38,7 +38,7 @@ serve(async (req) => {
       .select(`
         torn_player_id, name, faction_id, faction_name,
         company_id, company_name, company_role, company_type,
-        level, age, manual_labor, intelligence, endurance,
+        level, age, last_action, manual_labor, intelligence, endurance,
         flags!inner (
           is_single, seeking_marriage,
           has_island, island_open, seeking_island,

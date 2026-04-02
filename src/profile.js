@@ -80,6 +80,7 @@ export async function renderProfile(container) {
           ${player.company_name ? `<p>Company: <a href="https://www.torn.com/joblist.php#/p=corpinfo&ID=${player.company_id}" target="_blank" rel="noopener" class="info-link">${escapeHtml(player.company_name)}</a> (${escapeHtml(player.company_role || '')})</p>` : '<p>No company</p>'}
           <p>Marriage: <strong>${flags.is_single ? 'Single' : 'Married'}</strong></p>
           <p>Property: <strong>${flags.has_island ? 'Private Island' : 'Other'}</strong></p>
+          ${player.last_action ? `<p>Last Active: <strong>${timeAgo(player.last_action)}</strong></p>` : ''}
         </div>
 
         ${player.manual_labor || player.intelligence || player.endurance ? `
@@ -254,7 +255,7 @@ async function showReceivedDeck(playerId) {
     .select(`
       torn_player_id, name, faction_id, faction_name,
       company_id, company_name, company_role, company_type,
-      level, age, manual_labor, intelligence, endurance,
+      level, age, last_action, manual_labor, intelligence, endurance,
       flags (
         is_single, seeking_marriage,
         has_island, island_open, seeking_island,
@@ -447,6 +448,8 @@ async function handleRefresh(playerId) {
     company_role: userData.job?.job || null,
     company_type: userData.job?.company_type || null,
     level: userData.level || null,
+    age: userData.age || null,
+    last_action: userData.last_action?.timestamp ? new Date(userData.last_action.timestamp * 1000).toISOString() : null,
     manual_labor: userData.manual_labor || null,
     intelligence: userData.intelligence || null,
     endurance: userData.endurance || null,
@@ -469,6 +472,17 @@ async function handleRefresh(playerId) {
 
   showToast('Profile refreshed from Torn!', 'success');
   renderProfile(document.getElementById('screen-container'));
+}
+
+function timeAgo(dateStr) {
+  const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (seconds < 60) return 'Just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
 }
 
 function escapeHtml(str) {
