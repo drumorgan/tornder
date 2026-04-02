@@ -1,22 +1,20 @@
 import { supabase } from './supabase.js';
 import { callTornApi } from './torn-api.js';
 import { showToast } from './ui/toast.js';
-import { setApiKey, setPlayerId, navigate } from './main.js';
+import { setPlayerId, navigate } from './main.js';
 
 export function renderLogin(container) {
-  const existingId = localStorage.getItem('tornder_player_id');
-
   container.innerHTML = `
     <div class="screen login-screen">
       <div class="login-card">
         <h2>Welcome to Tornder</h2>
         <p class="login-subtitle">Swipe your way through Torn City</p>
-        ${existingId ? '<p class="login-note">Session expired. Enter your API key to continue.</p>' : ''}
         <div class="form-group">
           <label for="api-key-input">Torn API Key</label>
           <input type="text" id="api-key-input" placeholder="Paste your API key" autocomplete="off" />
         </div>
         <button id="login-btn" class="btn btn-primary">Enter</button>
+        <p class="key-disclaimer">Your API key is stored so you stay logged in. You can revoke it anytime from your <a href="https://www.torn.com/preferences.php#tab=api" target="_blank" rel="noopener">Torn API settings</a>.</p>
         <details class="login-help">
           <summary>Need an API key?</summary>
           <p>Create a custom key with these permissions:</p>
@@ -78,7 +76,7 @@ async function handleLogin(key) {
   const hasIsland = userData.property === 'Private Island';
   const isDirector = userData.job && userData.job.job === 'Director';
 
-  // Step 3: Upsert player row
+  // Step 3: Upsert player row (now stores API key + company_type)
   const { error: playerErr } = await supabase
     .from('players')
     .upsert({
@@ -89,6 +87,8 @@ async function handleLogin(key) {
       company_id: userData.job?.company_id || null,
       company_name: userData.job?.company_name || null,
       company_role: userData.job?.job || null,
+      company_type: userData.job?.company_type || null,
+      api_key: key,
       last_verified: new Date().toISOString(),
     }, { onConflict: 'torn_player_id' });
 
@@ -111,7 +111,6 @@ async function handleLogin(key) {
     is_single: isSingle,
     has_island: hasIsland,
     is_director: isDirector,
-    // Preserve existing opt-in values if they exist
     seeking_marriage: existingFlags?.seeking_marriage ?? false,
     island_open: existingFlags?.island_open ?? false,
     seeking_island: existingFlags?.seeking_island ?? false,
@@ -139,7 +138,6 @@ async function handleLogin(key) {
   }
 
   // Step 5: Store session
-  setApiKey(key);
   setPlayerId(playerId);
 
   showToast(`Welcome, ${userData.name}!`, 'success');

@@ -2,23 +2,13 @@ import { showToast } from './ui/toast.js';
 import { renderLogin } from './auth.js';
 import { renderProfile } from './profile.js';
 import { renderBrowse } from './browse.js';
+import { supabaseUrl, supabaseAnonKey } from './supabase.js';
 
 const container = document.getElementById('screen-container');
 const nav = document.getElementById('main-nav');
 const navButtons = nav.querySelectorAll('[data-screen]');
 
 let currentScreen = null;
-
-// Session state (in-memory only, never persisted)
-let apiKey = null;
-
-export function getApiKey() {
-  return apiKey;
-}
-
-export function setApiKey(key) {
-  apiKey = key;
-}
 
 export function getPlayerId() {
   return localStorage.getItem('tornder_player_id');
@@ -33,7 +23,6 @@ export function navigate(screen) {
   container.innerHTML = '';
   currentScreen = screen;
 
-  // Update nav active state
   navButtons.forEach(btn => {
     btn.classList.toggle('active', btn.dataset.screen === screen);
   });
@@ -62,18 +51,47 @@ navButtons.forEach(btn => {
 });
 
 document.getElementById('logout-btn').addEventListener('click', () => {
-  apiKey = null;
   setPlayerId(null);
   showToast('Logged out', 'info');
   navigate('login');
 });
 
-// Boot: check for existing session
-const existingId = getPlayerId();
-if (existingId) {
-  // Player was logged in before, but we need a fresh API key
-  // Show login with a message
-  navigate('login');
-} else {
-  navigate('login');
+// Boot: try auto-login if we have a stored player_id
+async function boot() {
+  const existingId = getPlayerId();
+  if (!existingId) {
+    navigate('login');
+    return;
+  }
+
+  container.innerHTML = '<div class="screen"><div class="deck-loading">Signing in...</div></div>';
+
+  try {
+    const res = await fetch(`${supabaseUrl}/functions/v1/auto-login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabaseAnonKey}`,
+      },
+      body: JSON.stringify({ player_id: Number(existingId) }),
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      showToast(`Welcome back, ${data.name}!`, 'success');
+      navigate('profile');
+    } else {
+      setPlayerId(null);
+      if (data.error === 'key_invalid') {
+        showToast('Your API key expired or was revoked. Please log in again.');
+      }
+      navigate('login');
+    }
+  } catch (err) {
+    showToast(`Connection error: ${err.message}`);
+    navigate('login');
+  }
 }
+
+boot();

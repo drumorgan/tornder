@@ -75,8 +75,8 @@ async function loadDeck(playerId) {
   if (!feed || feed.length === 0) {
     deckContainer.innerHTML = `
       <div class="deck-empty">
-        <p>No one in your circle is using Tornder for ${currentCategory} yet.</p>
-        <p>Share the link to get started!</p>
+        <p>No one is using Tornder for ${currentCategory} yet.</p>
+        <p class="deck-share">Share <strong>tornder.girovagabondo.com</strong> with your faction and friends to grow the community!</p>
       </div>
     `;
     return;
@@ -94,6 +94,7 @@ function showCurrentCard(playerId) {
     deckContainer.innerHTML = `
       <div class="deck-empty">
         <p>You've seen everyone! Check back later.</p>
+        <p class="deck-share">Share <strong>tornder.girovagabondo.com</strong> to get more people swiping!</p>
       </div>
     `;
     buttons.classList.add('hidden');
@@ -117,7 +118,7 @@ async function handleSwipe(direction, player, playerId) {
   if (feed) feed.shift();
 
   if (direction === 'right') {
-    await recordInterest(playerId, player.torn_player_id, currentCategory);
+    await recordInterest(playerId, player.torn_player_id, currentCategory, player);
   } else {
     await recordDismiss(playerId, player.torn_player_id, currentCategory);
   }
@@ -171,7 +172,7 @@ async function fetchFeed(viewerId, category) {
   }
 }
 
-async function recordInterest(fromId, toId, category) {
+async function recordInterest(fromId, toId, category, player) {
   const { error } = await supabase
     .from('interests')
     .insert({ from_player_id: fromId, to_player_id: toId, category });
@@ -191,7 +192,7 @@ async function recordInterest(fromId, toId, category) {
     .single();
 
   if (mutual) {
-    showMatchOverlay();
+    showMatchOverlay(player);
   }
 }
 
@@ -205,17 +206,21 @@ async function recordDismiss(fromId, toId, category) {
   }
 }
 
-function showMatchOverlay() {
+function showMatchOverlay(player) {
   const existing = document.querySelector('.match-popup');
   if (existing) existing.remove();
+
+  const name = player.name || 'Someone';
+  const profileUrl = `https://www.torn.com/profiles.php?XID=${player.torn_player_id}`;
 
   const overlay = document.createElement('div');
   overlay.className = 'match-popup';
   overlay.innerHTML = `
     <div class="match-popup-content">
       <h2>It's a match!</h2>
-      <p>You both expressed interest. Visit their Torn profile to connect!</p>
-      <button class="btn btn-primary match-dismiss-btn">Keep swiping</button>
+      <p>You and <strong>${escapeHtml(name)}</strong> both expressed interest!</p>
+      <a href="${profileUrl}" target="_blank" rel="noopener" class="btn btn-primary match-profile-btn">View ${escapeHtml(name)}'s Torn Profile</a>
+      <button class="btn btn-secondary match-dismiss-btn">Keep swiping</button>
     </div>
   `;
 
@@ -227,5 +232,12 @@ function showMatchOverlay() {
 
   setTimeout(() => {
     if (overlay.parentNode) overlay.remove();
-  }, 5000);
+  }, 10000);
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
 }

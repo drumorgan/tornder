@@ -1,7 +1,7 @@
 import { supabase } from './supabase.js';
 import { callTornApi } from './torn-api.js';
 import { showToast } from './ui/toast.js';
-import { getPlayerId, getApiKey, navigate } from './main.js';
+import { getPlayerId, navigate } from './main.js';
 
 export async function renderProfile(container) {
   const playerId = getPlayerId();
@@ -28,10 +28,18 @@ export async function renderProfile(container) {
     return;
   }
 
+  const initial = (player.name || '?')[0].toUpperCase();
+
   container.innerHTML = `
     <div class="screen profile-screen">
       <div class="profile-card">
-        <h2>${escapeHtml(player.name)}</h2>
+        <div class="profile-header">
+          <div class="avatar avatar-lg">${initial}</div>
+          <div>
+            <h2>${escapeHtml(player.name)}</h2>
+            <a href="https://www.torn.com/profiles.php?XID=${player.torn_player_id}" target="_blank" rel="noopener" class="profile-torn-link">View Torn Profile</a>
+          </div>
+        </div>
         <div class="profile-info">
           ${player.faction_name ? `<p>Faction: <strong>${escapeHtml(player.faction_name)}</strong></p>` : '<p>No faction</p>'}
           ${player.company_name ? `<p>Company: <strong>${escapeHtml(player.company_name)}</strong> (${escapeHtml(player.company_role || '')})</p>` : '<p>No company</p>'}
@@ -42,6 +50,7 @@ export async function renderProfile(container) {
         <hr />
 
         <h3>Opt-in Flags</h3>
+        <p class="toggle-hint">Toggle what you're looking for. Other players will see you in matching categories.</p>
         <div class="toggle-group" id="toggle-group">
           ${renderToggle('seeking_marriage', 'Seeking marriage', flags.seeking_marriage, flags.is_single, '\u{1F48D}')}
           ${renderToggle('island_open', 'Island open to others', flags.island_open, flags.has_island, '\u{1F3DD}\uFE0F')}
@@ -51,11 +60,6 @@ export async function renderProfile(container) {
         </div>
 
         <hr />
-
-        <div class="toggle-row">
-          <label class="toggle-label">\u{1F30D} Visible to everyone (public)</label>
-          <input type="checkbox" id="toggle-is_public" ${player.is_public ? 'checked' : ''} />
-        </div>
 
         <div class="profile-actions">
           <button id="refresh-btn" class="btn btn-secondary">Refresh from Torn</button>
@@ -69,7 +73,7 @@ export async function renderProfile(container) {
   // Attach toggle handlers
   const toggles = container.querySelectorAll('.toggle-row input[type="checkbox"]');
   toggles.forEach(toggle => {
-    toggle.addEventListener('change', () => handleToggle(toggle, playerId, player));
+    toggle.addEventListener('change', () => handleToggle(toggle, playerId));
   });
 
   // Refresh button
@@ -86,28 +90,10 @@ function renderToggle(field, label, value, enabled, icon) {
   `;
 }
 
-async function handleToggle(toggle, playerId, player) {
+async function handleToggle(toggle, playerId) {
   const field = toggle.dataset.field;
-
-  if (field === 'is_public' || toggle.id === 'toggle-is_public') {
-    // Update players table
-    const { error } = await supabase
-      .from('players')
-      .update({ is_public: toggle.checked })
-      .eq('torn_player_id', playerId);
-
-    if (error) {
-      showToast(`Failed to update: ${error.message}`);
-      toggle.checked = !toggle.checked;
-    } else {
-      showToast('Visibility updated', 'success');
-    }
-    return;
-  }
-
   if (!field) return;
 
-  // Update flags table
   const { error } = await supabase
     .from('flags')
     .update({ [field]: toggle.checked, updated_at: new Date().toISOString() })
@@ -122,13 +108,6 @@ async function handleToggle(toggle, playerId, player) {
 }
 
 async function handleRefresh(playerId) {
-  const key = getApiKey();
-  if (!key) {
-    showToast('API key not available. Please log in again.');
-    navigate('login');
-    return;
-  }
-
   const btn = document.getElementById('refresh-btn');
   btn.disabled = true;
   btn.textContent = 'Refreshing...';
@@ -136,7 +115,7 @@ async function handleRefresh(playerId) {
   const userData = await callTornApi({
     section: 'user',
     selections: 'basic,profile,properties',
-    key,
+    player_id: playerId,
   });
 
   if (!userData) {
@@ -156,6 +135,7 @@ async function handleRefresh(playerId) {
     company_id: userData.job?.company_id || null,
     company_name: userData.job?.company_name || null,
     company_role: userData.job?.job || null,
+    company_type: userData.job?.company_type || null,
     last_verified: new Date().toISOString(),
   }).eq('torn_player_id', playerId);
 

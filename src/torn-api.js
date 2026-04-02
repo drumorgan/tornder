@@ -3,17 +3,21 @@ import { showToast } from './ui/toast.js';
 
 /**
  * Call the Torn API through the Supabase torn-proxy Edge Function.
- * Returns parsed JSON or null on error.
+ * Pass either { key } (first login) or { player_id } (stored key lookup).
  */
-export async function callTornApi({ section, id, selections, key }) {
+export async function callTornApi({ section, id, selections, key, player_id }) {
   try {
+    const body = { section, id, selections };
+    if (key) body.key = key;
+    else if (player_id) body.player_id = Number(player_id);
+
     const res = await fetch(`${supabaseUrl}/functions/v1/torn-proxy`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${supabaseAnonKey}`,
       },
-      body: JSON.stringify({ section, id, selections, key }),
+      body: JSON.stringify(body),
     });
 
     if (!res.ok) {

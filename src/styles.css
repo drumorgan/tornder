@@ -149,6 +149,17 @@ html, body {
   border-color: var(--accent);
 }
 
+.key-disclaimer {
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.key-disclaimer a {
+  color: var(--accent);
+}
+
 .login-help {
   margin-top: 1.5rem;
   font-size: 0.85rem;
@@ -204,6 +215,27 @@ html, body {
   background: rgba(255,255,255,0.2);
 }
 
+/* === Avatar === */
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.avatar-lg {
+  width: 64px;
+  height: 64px;
+  font-size: 1.6rem;
+}
+
 /* === Profile Screen === */
 .profile-card {
   background: var(--bg-card);
@@ -211,9 +243,32 @@ html, body {
   border-radius: var(--radius);
 }
 
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.profile-header h2 {
+  color: var(--accent);
+  margin-bottom: 0.15rem;
+}
+
+.profile-torn-link {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
 .profile-card h2 {
   color: var(--accent);
   margin-bottom: 1rem;
+}
+
+.toggle-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
 }
 
 .profile-info p {
@@ -336,6 +391,15 @@ html, body {
   margin-bottom: 0.5rem;
 }
 
+.deck-share {
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.deck-share strong {
+  color: var(--accent);
+}
+
 /* === Player Card === */
 .player-card {
   background: var(--bg-card);
@@ -361,13 +425,26 @@ html, body {
   margin-bottom: 1rem;
 }
 
-.card-icon {
-  font-size: 2rem;
+.card-header-text {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.card-category-icon {
+  font-size: 1.2rem;
+  margin-left: auto;
 }
 
 .card-name {
   font-size: 1.3rem;
   color: var(--accent);
+}
+
+.card-company-type {
+  color: var(--text-muted);
+  font-size: 0.85rem;
 }
 
 .card-body p {
@@ -483,12 +560,18 @@ html, body {
 
 .match-popup-content p {
   color: var(--text-muted);
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.match-profile-btn {
+  display: block;
+  margin-bottom: 0.75rem;
+  text-decoration: none;
+  text-align: center;
 }
 
 .match-dismiss-btn {
-  width: auto;
-  padding: 0.6rem 2rem;
+  width: 100%;
 }
 
 /* === Toast === */
