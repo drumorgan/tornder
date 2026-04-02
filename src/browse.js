@@ -79,8 +79,8 @@ async function loadDeck(playerId) {
   if (!feed || feed.length === 0) {
     deckContainer.innerHTML = `
       <div class="deck-empty">
-        <p>No one is using Tornder for ${currentCategory} yet.</p>
-        <p class="deck-share">Share <strong>tornder.girovagabondo.com</strong> with your faction and friends to grow the community!</p>
+        <p>You've reached the end of the list for ${currentCategory}!</p>
+        <p class="deck-share">Share <a href="https://tornder.girovagabondo.com" target="_blank"><strong>tornder.girovagabondo.com</strong></a> with your faction and friends to grow the community!</p>
       </div>
     `;
     return;
@@ -98,7 +98,7 @@ function showCurrentCard(playerId) {
     deckContainer.innerHTML = `
       <div class="deck-empty">
         <p>You've seen everyone! Check back later.</p>
-        <p class="deck-share">Share <strong>tornder.girovagabondo.com</strong> to get more people swiping!</p>
+        <p class="deck-share">Share <a href="https://tornder.girovagabondo.com" target="_blank"><strong>tornder.girovagabondo.com</strong></a> to get more people swiping!</p>
       </div>
     `;
     buttons.classList.add('hidden');
