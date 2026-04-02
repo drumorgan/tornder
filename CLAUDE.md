@@ -2,7 +2,7 @@
 
 ## Deployment
 
-- **Always push changes all the way through**: After committing and pushing to a branch, create a pull request and merge it to main. Do not leave changes sitting on a feature branch waiting for the user to manually create a PR and merge.
+- **Always push changes all the way through**: After committing and pushing to a branch, use the GitHub MCP tools (`mcp__github__create_pull_request` and `mcp__github__merge_pull_request`) to create a pull request and merge it to main yourself. Do not leave changes sitting on a feature branch or ask the user to manually create/merge PRs.
 - **Supabase migrations**: After merging SQL migration files, remind the user to run the SQL manually in the Supabase Dashboard SQL Editor, since migrations are not auto-applied.
 
 ## Tech Stack
