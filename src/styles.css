@@ -479,6 +479,32 @@ html, body {
   text-align: center;
 }
 
+.profile-danger-zone {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.profile-danger-zone .danger-hint {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.btn-danger {
+  background: #8b2020;
+  color: #fff;
+  border: 1px solid #a03030;
+  padding: 0.5rem 1.25rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.2s;
+}
+
+.btn-danger:hover {
+  background: #a52a2a;
+}
+
 /* === Browse Screen === */
 .category-tabs {
   display: flex;

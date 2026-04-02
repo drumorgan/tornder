@@ -1,7 +1,7 @@
 import { supabase } from './supabase.js';
 import { callTornApi } from './torn-api.js';
 import { showToast } from './ui/toast.js';
-import { getPlayerId, navigate } from './main.js';
+import { getPlayerId, setPlayerId, navigate } from './main.js';
 
 export async function renderProfile(container) {
   const playerId = getPlayerId();
@@ -121,6 +121,12 @@ export async function renderProfile(container) {
         </div>
 
         <p class="profile-verified">Last verified: ${new Date(player.last_verified).toLocaleString()}</p>
+
+        <hr />
+        <div class="profile-danger-zone">
+          <button id="delete-data-btn" class="btn btn-danger">Delete All My Data</button>
+          <p class="danger-hint">Permanently removes your profile, flags, interests, and API key from our database.</p>
+        </div>
       </div>
       <div class="giro-box">
         <p class="giro-box-title">More Torn tools by Giro Vagabondo</p>
@@ -137,6 +143,9 @@ export async function renderProfile(container) {
 
   // Refresh button
   document.getElementById('refresh-btn').addEventListener('click', () => handleRefresh(playerId));
+
+  // Delete data button
+  document.getElementById('delete-data-btn').addEventListener('click', () => handleDeleteData(playerId));
 
   // Stat click handlers
   container.querySelectorAll('.stat-clickable').forEach(item => {
@@ -472,6 +481,51 @@ async function handleRefresh(playerId) {
 
   showToast('Profile refreshed from Torn!', 'success');
   renderProfile(document.getElementById('screen-container'));
+}
+
+async function handleDeleteData(playerId) {
+  const confirmed = confirm(
+    'Are you sure you want to permanently delete ALL your data from Tornder?\n\n' +
+    'This will remove your profile, flags, interests, matches, and stored API key. This cannot be undone.'
+  );
+  if (!confirmed) return;
+
+  const doubleConfirmed = confirm('This is irreversible. Are you absolutely sure?');
+  if (!doubleConfirmed) return;
+
+  const btn = document.getElementById('delete-data-btn');
+  btn.disabled = true;
+  btn.textContent = 'Deleting...';
+
+  // Delete in order: interests/dismissed (reference players), then flags cascades with player
+  const { error: intFromErr } = await supabase
+    .from('interests')
+    .delete()
+    .or(`from_player_id.eq.${playerId},to_player_id.eq.${playerId}`);
+
+  const { error: disFromErr } = await supabase
+    .from('dismissed')
+    .delete()
+    .or(`from_player_id.eq.${playerId},to_player_id.eq.${playerId}`);
+
+  // Delete player row (flags cascade automatically)
+  const { error: playerErr } = await supabase
+    .from('players')
+    .delete()
+    .eq('torn_player_id', playerId);
+
+  if (intFromErr || disFromErr || playerErr) {
+    const msg = (intFromErr || disFromErr || playerErr).message;
+    showToast(`Error deleting data: ${msg}`);
+    btn.disabled = false;
+    btn.textContent = 'Delete All My Data';
+    return;
+  }
+
+  // Clear local session
+  setPlayerId(null);
+  showToast('All your data has been permanently deleted.', 'info');
+  navigate('login');
 }
 
 function timeAgo(dateStr) {
