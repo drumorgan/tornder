@@ -811,7 +811,6 @@ html, body {
   text-align: center;
   font-size: 0.85rem;
   color: var(--text-muted);
-  max-width: 400px;
   width: 100%;
 }
 
