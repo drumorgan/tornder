@@ -14,19 +14,7 @@ export function renderLogin(container) {
           <input type="text" id="api-key-input" placeholder="Paste your API key" autocomplete="off" />
         </div>
         <button id="login-btn" class="btn btn-primary">Enter</button>
-        <p class="key-disclaimer">Your API key is stored so you stay logged in. You can revoke it anytime from your <a href="https://www.torn.com/preferences.php#tab=api" target="_blank" rel="noopener">Torn API settings</a>.</p>
-        <details class="login-help">
-          <summary>Need an API key?</summary>
-          <p>Create a custom key with these permissions:</p>
-          <ul>
-            <li>User: basic, profile, properties</li>
-            <li>Faction: basic</li>
-            <li>Company: employees</li>
-          </ul>
-          <a href="https://www.torn.com/preferences.php#tab=api" target="_blank" rel="noopener">
-            Create key on Torn
-          </a>
-        </details>
+        <p class="key-disclaimer">Need a key? <a href="https://www.torn.com/preferences.php#tab=api?step=addNewKey&user=basic,profile,properties&title=Tornder" target="_blank" rel="noopener">Click here to create a Custom Key</a> &mdash; it only shares your name, faction, company, and property info. Your key is stored so you stay logged in. You can revoke it anytime from your <a href="https://www.torn.com/preferences.php#tab=api" target="_blank" rel="noopener">Torn API settings</a>.</p>
       </div>
     </div>
   `;
