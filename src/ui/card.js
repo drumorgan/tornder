@@ -24,16 +24,15 @@ export function createCard(player, category) {
   card.dataset.playerId = player.torn_player_id;
 
   const categoryIcon = { marriage: '\u{1F48D}', island: '\u{1F3DD}\uFE0F', company: '\u{1F4BC}' }[category];
+  const categoryColor = { marriage: '#e94560', island: '#0ea5e9', company: '#f59e0b' }[category] || 'var(--accent)';
   const detail = getCategoryDetail(player, category);
-  const initial = (player.name || '?')[0].toUpperCase();
   const companyTypeName = player.company_type ? COMPANY_TYPES[player.company_type] : null;
 
   card.innerHTML = `
     <div class="card-header">
-      <div class="avatar">${initial}</div>
+      <div class="avatar" style="background:${categoryColor};font-size:1.4rem">${categoryIcon}</div>
       <div class="card-header-text">
         <h3 class="card-name">${escapeHtml(player.name)}</h3>
-        <span class="card-category-icon">${categoryIcon}</span>
       </div>
     </div>
     <div class="card-body">
