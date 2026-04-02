@@ -48,6 +48,12 @@ html, body {
   letter-spacing: 2px;
 }
 
+.logo-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.1rem;
+}
+
 #main-nav {
   display: flex;
   gap: 0.5rem;
@@ -263,6 +269,38 @@ html, body {
 .profile-card h2 {
   color: var(--accent);
   margin-bottom: 1rem;
+}
+
+/* === Stat Bar === */
+.stat-bar {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.stat-item {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius);
+  padding: 0.75rem 0.5rem;
+  text-align: center;
+}
+
+.stat-value {
+  display: block;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.stat-label {
+  display: block;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 0.2rem;
 }
 
 .toggle-hint {
@@ -626,6 +664,31 @@ html, body {
 .toast-info {
   background: #2980b9;
   color: white;
+}
+
+/* === Footer === */
+.app-footer {
+  text-align: center;
+  padding: 1.5rem 1rem;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 0.4rem;
+}
+
+.footer-links a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.footer-links a:hover {
+  text-decoration: underline;
 }
 
 /* === Animations === */

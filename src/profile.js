@@ -16,16 +16,35 @@ export async function renderProfile(container) {
     </div>
   `;
 
-  // Fetch player + flags
-  const [{ data: player }, { data: flags }] = await Promise.all([
+  // Fetch player + flags + stats
+  const [{ data: player }, { data: flags }, { count: sentCount }, { count: receivedCount }] = await Promise.all([
     supabase.from('players').select('*').eq('torn_player_id', playerId).single(),
     supabase.from('flags').select('*').eq('torn_player_id', playerId).single(),
+    supabase.from('interests').select('*', { count: 'exact', head: true }).eq('from_player_id', playerId),
+    supabase.from('interests').select('*', { count: 'exact', head: true }).eq('to_player_id', playerId),
   ]);
 
   if (!player || !flags) {
     showToast('Could not load profile. Try logging in again.');
     navigate('login');
     return;
+  }
+
+  // Count mutual matches (where both swiped right)
+  const { data: myInterests } = await supabase
+    .from('interests')
+    .select('to_player_id')
+    .eq('from_player_id', playerId);
+
+  let matchCount = 0;
+  if (myInterests && myInterests.length > 0) {
+    const myTargets = myInterests.map(r => r.to_player_id);
+    const { count } = await supabase
+      .from('interests')
+      .select('*', { count: 'exact', head: true })
+      .eq('to_player_id', playerId)
+      .in('from_player_id', myTargets);
+    matchCount = count || 0;
   }
 
   const initial = (player.name || '?')[0].toUpperCase();
@@ -38,6 +57,20 @@ export async function renderProfile(container) {
           <div>
             <h2>${escapeHtml(player.name)}</h2>
             <a href="https://www.torn.com/profiles.php?XID=${player.torn_player_id}" target="_blank" rel="noopener" class="profile-torn-link">View Torn Profile</a>
+          </div>
+        </div>
+        <div class="stat-bar">
+          <div class="stat-item">
+            <span class="stat-value">${matchCount}</span>
+            <span class="stat-label">MATCHES</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">${receivedCount || 0}</span>
+            <span class="stat-label">INTERESTED IN YOU</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">${sentCount || 0}</span>
+            <span class="stat-label">INTERESTS SENT</span>
           </div>
         </div>
         <div class="profile-info">
