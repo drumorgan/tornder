@@ -1,0 +1,18 @@
+{
+  "name": "tornder",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Tornder — social matching app for Torn City players",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0"
+  }
+}
