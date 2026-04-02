@@ -2,6 +2,9 @@
  * Attaches swipe gesture handling to a card element.
  * onSwipe is called with 'left' or 'right'.
  */
+// Expose for reuse in overlays
+window.__tornderSwipe = { enableSwipe };
+
 export function enableSwipe(cardEl, { onSwipe, threshold = 80 }) {
   let startX = 0;
   let startY = 0;

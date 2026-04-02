@@ -15,6 +15,9 @@ const COMPANY_TYPES = {
 /**
  * Creates a player card DOM element for the swipe deck.
  */
+// Expose for reuse in overlays
+window.__tornderCard = { createCard };
+
 export function createCard(player, category) {
   const card = document.createElement('div');
   card.className = 'player-card';
@@ -34,6 +37,7 @@ export function createCard(player, category) {
       </div>
     </div>
     <div class="card-body">
+      ${player.level ? `<p class="card-level">Level ${player.level}${player.age ? ` &middot; ${Number(player.age).toLocaleString()} days` : ''}</p>` : ''}
       ${player.faction_name ? `<p class="card-faction">Faction: <a href="https://www.torn.com/factions.php?step=profile&ID=${player.faction_id}" target="_blank" rel="noopener" class="info-link">${escapeHtml(player.faction_name)}</a></p>` : ''}
       ${player.company_name ? `<p class="card-company"><a href="https://www.torn.com/joblist.php#/p=corpinfo&ID=${player.company_id}" target="_blank" rel="noopener" class="info-link">${escapeHtml(player.company_name)}</a>${companyTypeName ? ` <span class="card-company-type">(${companyTypeName})</span>` : ''}${player.company_role ? ` &mdash; ${escapeHtml(player.company_role)}` : ''}</p>` : ''}
       <p class="card-detail">${detail}</p>

@@ -39,6 +39,10 @@ export async function renderBrowse(container) {
         <button id="btn-dismiss" class="btn btn-dismiss">\u2717</button>
         <button id="btn-interest" class="btn btn-interest">\u2713</button>
       </div>
+      <div class="giro-box">
+        <p class="giro-box-title">More Torn tools by Giro Vagabondo</p>
+        <a href="https://happyjump.girovagabondo.com" target="_blank" rel="noopener" class="giro-box-link">HappyJump</a> &mdash; Insured happy jumping
+      </div>
     </div>
   `;
 

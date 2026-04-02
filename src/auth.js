@@ -1,7 +1,7 @@
 import { supabase } from './supabase.js';
 import { callTornApi } from './torn-api.js';
 import { showToast } from './ui/toast.js';
-import { setPlayerId, navigate } from './main.js';
+import { setPlayerId, navigate, updateUserCount } from './main.js';
 
 export function renderLogin(container) {
   container.innerHTML = `
@@ -15,6 +15,33 @@ export function renderLogin(container) {
         </div>
         <button id="login-btn" class="btn btn-primary">Enter</button>
         <p class="key-disclaimer">Need a key? <a href="https://www.torn.com/preferences.php#tab=api?step=addNewKey&user=basic,profile,properties&title=Tornder" target="_blank" rel="noopener">Click here to create a Custom Key</a> &mdash; it only shares your name, faction, company, and property info. Your key is stored so you stay logged in. You can revoke it anytime from your <a href="https://www.torn.com/preferences.php#tab=api" target="_blank" rel="noopener">Torn API settings</a>.</p>
+      </div>
+
+      <div class="tos-box">
+        <h3 class="tos-title">API Terms of Service</h3>
+        <div class="tos-grid">
+          <div>
+            <p class="tos-heading">DATA STORAGE</p>
+            <p>Player name, ID, level, faction, company, and property status stored until you log out</p>
+          </div>
+          <div>
+            <p class="tos-heading">DATA SHARING</p>
+            <p>Your name, level, faction, and company are shown to other Tornder users when you opt in</p>
+          </div>
+          <div>
+            <p class="tos-heading">KEY STORAGE</p>
+            <p>Stored server-side for auto-login. Never shared. Revoke anytime from Torn settings</p>
+          </div>
+          <div>
+            <p class="tos-heading">KEY ACCESS LEVEL</p>
+            <p>Custom: user &rarr; basic, profile, properties</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="giro-box">
+        <p class="giro-box-title">More Torn tools by Giro Vagabondo</p>
+        <a href="https://happyjump.girovagabondo.com" target="_blank" rel="noopener" class="giro-box-link">HappyJump</a> &mdash; Insured happy jumping
       </div>
     </div>
   `;
@@ -76,6 +103,8 @@ async function handleLogin(key) {
       company_name: userData.job?.company_name || null,
       company_role: userData.job?.job || null,
       company_type: userData.job?.company_type || null,
+      level: userData.level || null,
+      age: userData.age || null,
       api_key: key,
       last_verified: new Date().toISOString(),
     }, { onConflict: 'torn_player_id' });
@@ -127,6 +156,7 @@ async function handleLogin(key) {
 
   // Step 5: Store session
   setPlayerId(playerId);
+  updateUserCount();
 
   showToast(`Welcome, ${userData.name}!`, 'success');
   navigate('profile');

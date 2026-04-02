@@ -71,6 +71,8 @@ serve(async (req) => {
       company_name: userData.job?.company_name || null,
       company_role: userData.job?.job || null,
       company_type: userData.job?.company_type || null,
+      level: userData.level || null,
+      age: userData.age || null,
       last_verified: new Date().toISOString(),
     }).eq('torn_player_id', player_id)
 

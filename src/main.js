@@ -2,7 +2,7 @@ import { showToast } from './ui/toast.js';
 import { renderLogin } from './auth.js';
 import { renderProfile } from './profile.js';
 import { renderBrowse } from './browse.js';
-import { supabaseUrl, supabaseAnonKey } from './supabase.js';
+import { supabase, supabaseUrl, supabaseAnonKey } from './supabase.js';
 
 const container = document.getElementById('screen-container');
 const nav = document.getElementById('main-nav');
@@ -95,3 +95,17 @@ async function boot() {
 }
 
 boot();
+
+// Update total user count in header
+async function updateUserCount() {
+  const { count } = await supabase
+    .from('players')
+    .select('*', { count: 'exact', head: true });
+  const el = document.getElementById('user-count');
+  if (el && count !== null) {
+    el.textContent = `${count} Torn Citizen${count !== 1 ? 's' : ''} and counting`;
+  }
+}
+updateUserCount();
+
+export { updateUserCount };

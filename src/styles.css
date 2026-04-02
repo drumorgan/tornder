@@ -64,6 +64,12 @@ html, body {
   text-decoration: underline;
 }
 
+.user-count {
+  font-size: 0.75rem;
+  color: var(--accent);
+  margin-top: 0.25rem;
+}
+
 #main-nav {
   display: flex;
   gap: 0.5rem;
@@ -745,6 +751,124 @@ html, body {
 .toast-info {
   background: #2980b9;
   color: white;
+}
+
+/* === Card Level === */
+.card-level {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* === TOS Box === */
+.tos-box {
+  background: var(--bg-card);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  margin-top: 1rem;
+  max-width: 400px;
+  width: 100%;
+}
+
+.tos-title {
+  color: var(--accent);
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
+.tos-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.tos-heading {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.3rem;
+}
+
+.tos-grid p:not(.tos-heading) {
+  font-size: 0.8rem;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+/* === Giro Box (cross-promotion) === */
+.giro-box {
+  background: var(--bg-card);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin-top: 1rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  max-width: 400px;
+  width: 100%;
+}
+
+.giro-box-title {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  margin-bottom: 0.4rem;
+}
+
+.giro-box-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.giro-box-link:hover {
+  text-decoration: underline;
+}
+
+/* === Stat Deck Overlay (Interested in You swipe) === */
+.stat-deck-content {
+  background: var(--bg-card);
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  width: 90%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-deck-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.stat-deck-header h3 {
+  color: var(--accent);
+}
+
+.stat-deck-count {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.stat-deck-container {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.stat-deck-close {
+  margin-top: 0.75rem;
+  width: 100%;
 }
 
 /* === Animations === */

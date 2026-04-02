@@ -74,6 +74,8 @@ export async function renderProfile(container) {
           </div>
         </div>
         <div class="profile-info">
+          ${player.level ? `<p>Level: <strong>${player.level}</strong></p>` : ''}
+          ${player.age ? `<p>Days in Torn: <strong>${Number(player.age).toLocaleString()}</strong></p>` : ''}
           ${player.faction_name ? `<p>Faction: <a href="https://www.torn.com/factions.php?step=profile&ID=${player.faction_id}" target="_blank" rel="noopener" class="info-link">${escapeHtml(player.faction_name)}</a></p>` : '<p>No faction</p>'}
           ${player.company_name ? `<p>Company: <a href="https://www.torn.com/joblist.php#/p=corpinfo&ID=${player.company_id}" target="_blank" rel="noopener" class="info-link">${escapeHtml(player.company_name)}</a> (${escapeHtml(player.company_role || '')})</p>` : '<p>No company</p>'}
           <p>Marriage: <strong>${flags.is_single ? 'Single' : 'Married'}</strong></p>
@@ -100,6 +102,10 @@ export async function renderProfile(container) {
 
         <p class="profile-verified">Last verified: ${new Date(player.last_verified).toLocaleString()}</p>
       </div>
+      <div class="giro-box">
+        <p class="giro-box-title">More Torn tools by Giro Vagabondo</p>
+        <a href="https://happyjump.girovagabondo.com" target="_blank" rel="noopener" class="giro-box-link">HappyJump</a> &mdash; Insured happy jumping
+      </div>
     </div>
   `;
 
@@ -119,12 +125,15 @@ export async function renderProfile(container) {
 }
 
 async function showStatList(stat, playerId) {
+  if (stat === 'received') {
+    return showReceivedDeck(playerId);
+  }
+
   let title = '';
   let playerIds = [];
 
   if (stat === 'matches') {
     title = 'Your Matches';
-    // Find mutual: I liked them AND they liked me
     const { data: sent } = await supabase
       .from('interests')
       .select('to_player_id')
@@ -138,13 +147,6 @@ async function showStatList(stat, playerId) {
         .in('from_player_id', targets);
       playerIds = (mutual || []).map(r => r.from_player_id);
     }
-  } else if (stat === 'received') {
-    title = 'Interested in You';
-    const { data } = await supabase
-      .from('interests')
-      .select('from_player_id')
-      .eq('to_player_id', playerId);
-    playerIds = (data || []).map(r => r.from_player_id);
   } else if (stat === 'sent') {
     title = 'Interests Sent';
     const { data } = await supabase
@@ -154,7 +156,6 @@ async function showStatList(stat, playerId) {
     playerIds = (data || []).map(r => r.to_player_id);
   }
 
-  // Deduplicate
   playerIds = [...new Set(playerIds)];
 
   if (playerIds.length === 0) {
@@ -162,13 +163,11 @@ async function showStatList(stat, playerId) {
     return;
   }
 
-  // Fetch player names
   const { data: players } = await supabase
     .from('players')
-    .select('torn_player_id, name')
+    .select('torn_player_id, name, level')
     .in('torn_player_id', playerIds);
 
-  // Show overlay
   const existing = document.querySelector('.stat-list-overlay');
   if (existing) existing.remove();
 
@@ -182,7 +181,7 @@ async function showStatList(stat, playerId) {
           <li>
             <a href="https://www.torn.com/profiles.php?XID=${p.torn_player_id}" target="_blank" rel="noopener" class="stat-list-player">
               <span class="avatar avatar-sm">${(p.name || '?')[0].toUpperCase()}</span>
-              ${escapeHtml(p.name)}
+              <span>${escapeHtml(p.name)}${p.level ? ` <span class="card-company-type">(Lvl ${p.level})</span>` : ''}</span>
             </a>
           </li>
         `).join('')}
@@ -196,6 +195,180 @@ async function showStatList(stat, playerId) {
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) overlay.remove();
   });
+}
+
+async function showReceivedDeck(playerId) {
+  // Fetch who expressed interest in me
+  const { data: received } = await supabase
+    .from('interests')
+    .select('from_player_id, category')
+    .eq('to_player_id', playerId);
+
+  if (!received || received.length === 0) {
+    showToast('No one interested yet');
+    return;
+  }
+
+  const receivedIds = [...new Set(received.map(r => r.from_player_id))];
+
+  // Filter out players I've already acted on (in interests or dismissed)
+  const [{ data: myInterests }, { data: myDismissed }] = await Promise.all([
+    supabase.from('interests').select('to_player_id').eq('from_player_id', playerId),
+    supabase.from('dismissed').select('to_player_id').eq('from_player_id', playerId),
+  ]);
+
+  const actedOn = new Set([
+    ...(myInterests || []).map(r => r.to_player_id),
+    ...(myDismissed || []).map(r => r.to_player_id),
+  ]);
+
+  const unseenIds = receivedIds.filter(id => !actedOn.has(id));
+
+  if (unseenIds.length === 0) {
+    showToast('You\'ve responded to everyone! Check your matches.');
+    return;
+  }
+
+  // Fetch full player data + flags for the unseen
+  const { data: players } = await supabase
+    .from('players')
+    .select(`
+      torn_player_id, name, faction_id, faction_name,
+      company_id, company_name, company_role, company_type,
+      level, age,
+      flags (
+        is_single, seeking_marriage,
+        has_island, island_open, seeking_island,
+        is_director, company_hiring, seeking_job
+      )
+    `)
+    .in('torn_player_id', unseenIds);
+
+  const feed = (players || []).map(p => ({
+    ...p,
+    ...(Array.isArray(p.flags) ? p.flags[0] : p.flags),
+    flags: undefined,
+  }));
+
+  if (feed.length === 0) {
+    showToast('No new admirers to review');
+    return;
+  }
+
+  // Build the category map — what category did they express interest in?
+  const categoryMap = {};
+  for (const r of received) {
+    if (!categoryMap[r.from_player_id]) categoryMap[r.from_player_id] = r.category;
+  }
+
+  // Show overlay with swipe deck
+  const existing = document.querySelector('.stat-list-overlay');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.className = 'stat-list-overlay';
+  overlay.innerHTML = `
+    <div class="stat-deck-content">
+      <div class="stat-deck-header">
+        <h3>Interested in You</h3>
+        <span class="stat-deck-count">${feed.length} to review</span>
+      </div>
+      <div class="stat-deck-container"></div>
+      <div class="swipe-buttons">
+        <button class="btn btn-dismiss stat-deck-dismiss">\u2717</button>
+        <button class="btn btn-interest stat-deck-interest">\u2713</button>
+      </div>
+      <button class="btn btn-secondary stat-deck-close">Close</button>
+    </div>
+  `;
+
+  document.getElementById('app').appendChild(overlay);
+
+  let currentIndex = 0;
+
+  function showNext() {
+    const container = overlay.querySelector('.stat-deck-container');
+    const countEl = overlay.querySelector('.stat-deck-count');
+
+    if (currentIndex >= feed.length) {
+      container.innerHTML = '<div class="deck-empty"><p>All done! Check your matches.</p></div>';
+      overlay.querySelector('.swipe-buttons').classList.add('hidden');
+      countEl.textContent = 'Done';
+      return;
+    }
+
+    const player = feed[currentIndex];
+    const category = categoryMap[player.torn_player_id] || 'marriage';
+    container.innerHTML = '';
+
+    const { createCard } = window.__tornderCard;
+    const card = createCard(player, category);
+    container.appendChild(card);
+    countEl.textContent = `${feed.length - currentIndex} to review`;
+
+    const { enableSwipe } = window.__tornderSwipe;
+    enableSwipe(card, {
+      onSwipe: (direction) => handleDeckSwipe(direction, player, category),
+    });
+  }
+
+  async function handleDeckSwipe(direction, player, category) {
+    currentIndex++;
+    if (direction === 'right') {
+      const { error } = await supabase
+        .from('interests')
+        .insert({ from_player_id: Number(playerId), to_player_id: player.torn_player_id, category });
+      if (error && !error.message.includes('duplicate')) {
+        showToast(`Error: ${error.message}`);
+      }
+      // Check for match
+      const { data: mutual } = await supabase
+        .from('interests')
+        .select('id')
+        .eq('from_player_id', player.torn_player_id)
+        .eq('to_player_id', Number(playerId))
+        .eq('category', category)
+        .single();
+      if (mutual) {
+        showToast(`It's a match with ${player.name}!`, 'success');
+      }
+    } else {
+      await supabase
+        .from('dismissed')
+        .insert({ from_player_id: Number(playerId), to_player_id: player.torn_player_id, category });
+    }
+    showNext();
+  }
+
+  // Button handlers
+  overlay.querySelector('.stat-deck-dismiss').addEventListener('click', () => {
+    const card = overlay.querySelector('.player-card');
+    if (!card || currentIndex >= feed.length) return;
+    const player = feed[currentIndex];
+    const category = categoryMap[player.torn_player_id] || 'marriage';
+    card.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
+    card.style.transform = `translateX(-${window.innerWidth}px) rotate(-15deg)`;
+    card.style.opacity = '0';
+    setTimeout(() => handleDeckSwipe('left', player, category), 300);
+  });
+
+  overlay.querySelector('.stat-deck-interest').addEventListener('click', () => {
+    const card = overlay.querySelector('.player-card');
+    if (!card || currentIndex >= feed.length) return;
+    const player = feed[currentIndex];
+    const category = categoryMap[player.torn_player_id] || 'marriage';
+    card.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
+    card.style.transform = `translateX(${window.innerWidth}px) rotate(15deg)`;
+    card.style.opacity = '0';
+    setTimeout(() => handleDeckSwipe('right', player, category), 300);
+  });
+
+  overlay.querySelector('.stat-deck-close').addEventListener('click', () => {
+    overlay.remove();
+    renderProfile(document.getElementById('screen-container'));
+  });
+
+  showNext();
 }
 
 function renderToggle(field, label, value, enabled, icon) {
@@ -254,6 +427,8 @@ async function handleRefresh(playerId) {
     company_name: userData.job?.company_name || null,
     company_role: userData.job?.job || null,
     company_type: userData.job?.company_type || null,
+    level: userData.level || null,
+    age: userData.age || null,
     last_verified: new Date().toISOString(),
   }).eq('torn_player_id', playerId);
 
