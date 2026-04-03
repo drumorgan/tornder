@@ -137,6 +137,7 @@ async function handleLogin(key) {
     seeking_island: existingFlags?.seeking_island ?? false,
     company_hiring: existingFlags?.company_hiring ?? false,
     seeking_job: existingFlags?.seeking_job ?? false,
+    preferred_company_types: existingFlags?.preferred_company_types ?? null,
     updated_at: new Date().toISOString(),
   };
 

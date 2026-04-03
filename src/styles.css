@@ -949,6 +949,53 @@ html, body {
   color: var(--text);
 }
 
+/* === Company Type Filter === */
+.company-type-controls {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.btn-sm {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+  width: auto;
+}
+
+.company-type-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem;
+}
+
+.company-type-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.company-type-item:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+.company-type-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.company-type-item span {
+  color: var(--text);
+  line-height: 1.2;
+}
+
 /* === Animations === */
 @keyframes fadeIn {
   from { opacity: 0; }

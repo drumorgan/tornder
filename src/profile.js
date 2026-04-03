@@ -132,6 +132,26 @@ export async function renderProfile(container) {
           ${renderToggle('seeking_job', 'Looking for work', flags.seeking_job, !flags.is_director, '\u{1F4BC}')}
         </div>
 
+        ${!flags.is_director ? `
+        <div id="company-type-filter" class="${flags.seeking_job ? '' : 'hidden'}">
+          <hr />
+          <h3>Company Types You Want</h3>
+          <p class="toggle-hint">Select which company types you'd like to work at. Only matching directors will appear in your feed.</p>
+          <div class="company-type-controls">
+            <button id="check-all-types" class="btn btn-sm btn-secondary">Check All</button>
+            <button id="uncheck-all-types" class="btn btn-sm btn-secondary">Uncheck All</button>
+          </div>
+          <div class="company-type-grid" id="company-type-grid">
+            ${Object.entries(COMPANY_TYPES).map(([id, name]) => `
+              <label class="company-type-item">
+                <input type="checkbox" data-type-id="${id}" ${(flags.preferred_company_types || []).includes(Number(id)) ? 'checked' : ''} />
+                <span>${escapeHtml(name)}</span>
+              </label>
+            `).join('')}
+          </div>
+        </div>
+        ` : ''}
+
         <hr />
 
         <div class="profile-actions">
@@ -156,8 +176,31 @@ export async function renderProfile(container) {
   // Attach toggle handlers
   const toggles = container.querySelectorAll('.toggle-row input[type="checkbox"]');
   toggles.forEach(toggle => {
-    toggle.addEventListener('change', () => handleToggle(toggle, playerId));
+    toggle.addEventListener('change', () => {
+      handleToggle(toggle, playerId);
+      // Show/hide company type filter when seeking_job is toggled
+      if (toggle.dataset.field === 'seeking_job') {
+        const filterDiv = document.getElementById('company-type-filter');
+        if (filterDiv) filterDiv.classList.toggle('hidden', !toggle.checked);
+      }
+    });
   });
+
+  // Company type filter handlers
+  const typeGrid = document.getElementById('company-type-grid');
+  if (typeGrid) {
+    typeGrid.addEventListener('change', () => saveCompanyTypePrefs(playerId));
+
+    document.getElementById('check-all-types').addEventListener('click', () => {
+      typeGrid.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
+      saveCompanyTypePrefs(playerId);
+    });
+
+    document.getElementById('uncheck-all-types').addEventListener('click', () => {
+      typeGrid.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+      saveCompanyTypePrefs(playerId);
+    });
+  }
 
   // Refresh button
   document.getElementById('refresh-btn').addEventListener('click', () => handleRefresh(playerId));
@@ -426,6 +469,21 @@ function renderToggle(field, label, value, enabled, icon) {
       <input type="checkbox" id="toggle-${field}" data-field="${field}" ${value ? 'checked' : ''} />
     </div>
   `;
+}
+
+async function saveCompanyTypePrefs(playerId) {
+  const grid = document.getElementById('company-type-grid');
+  if (!grid) return;
+  const checked = [...grid.querySelectorAll('input[type="checkbox"]:checked')].map(cb => Number(cb.dataset.typeId));
+  const { error } = await supabase
+    .from('flags')
+    .update({ preferred_company_types: checked, updated_at: new Date().toISOString() })
+    .eq('torn_player_id', playerId);
+  if (error) {
+    showToast(`Failed to save preferences: ${error.message}`);
+  } else {
+    showToast('Company type preferences saved', 'success');
+  }
 }
 
 async function handleToggle(toggle, playerId) {

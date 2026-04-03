@@ -35,7 +35,7 @@ serve(async (req) => {
     // Look up viewer's flags to determine their role for category-specific filtering
     const { data: viewerFlags } = await supabase
       .from('flags')
-      .select('is_director, company_hiring, seeking_job, has_island, island_open, seeking_island')
+      .select('is_director, company_hiring, seeking_job, has_island, island_open, seeking_island, preferred_company_types')
       .eq('torn_player_id', viewer_id)
       .single()
 
@@ -99,8 +99,21 @@ serve(async (req) => {
       ...(dismissedList || []).map((r: any) => r.to_player_id),
     ])
 
+    // Filter by preferred company types for job seekers browsing company category
+    const preferredTypes = viewerFlags?.preferred_company_types as number[] | null
+    const shouldFilterByType = category === 'company' && !viewerFlags?.is_director && preferredTypes && preferredTypes.length > 0
+    const preferredSet = shouldFilterByType ? new Set(preferredTypes) : null
+
     const filtered = (players || [])
       .filter((p: any) => !swipedIds.has(p.torn_player_id))
+      .filter((p: any) => {
+        // If seeker has company type preferences, only show directors with matching company types
+        if (preferredSet && p.company_type) {
+          return preferredSet.has(p.company_type)
+        }
+        // If no preferences set or director has no type, show all
+        return !preferredSet
+      })
       .map((p: any) => ({
         ...p,
         // Flatten flags from nested object
