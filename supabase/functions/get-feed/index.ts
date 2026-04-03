@@ -44,7 +44,7 @@ serve(async (req) => {
       .from('players')
       .select(`
         torn_player_id, name, faction_id, faction_name,
-        company_id, company_name, company_role, company_type,
+        company_id, company_name, company_role, company_type, company_stars,
         level, age, last_action, manual_labor, intelligence, endurance,
         flags!inner (
           is_single, seeking_marriage,

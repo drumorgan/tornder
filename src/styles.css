@@ -604,6 +604,12 @@ html, body {
   font-size: 0.85rem;
 }
 
+.card-company-stars {
+  color: #f59e0b;
+  font-size: 0.75rem;
+  letter-spacing: -1px;
+}
+
 .card-body p {
   margin-bottom: 0.3rem;
   font-size: 0.95rem;

@@ -63,6 +63,22 @@ serve(async (req) => {
     const hasIsland = userData.property === 'Private Island'
     const isDirector = userData.job && userData.job.job === 'Director'
 
+    // Fetch company stars if player has a company
+    let companyStars: number | null = null
+    if (userData.job?.company_id) {
+      try {
+        const companyRes = await fetch(
+          `https://api.torn.com/company/${userData.job.company_id}?selections=profile&key=${player.api_key}`
+        )
+        const companyData = await companyRes.json()
+        if (companyData && !companyData.error && companyData.company?.rating) {
+          companyStars = companyData.company.rating
+        }
+      } catch (_) {
+        // Non-critical — skip if company API call fails
+      }
+    }
+
     await supabase.from('players').update({
       name: userData.name,
       faction_id: userData.faction?.faction_id || null,
@@ -71,6 +87,7 @@ serve(async (req) => {
       company_name: userData.job?.company_name || null,
       company_role: userData.job?.job || null,
       company_type: userData.job?.company_type || null,
+      company_stars: companyStars,
       level: userData.level || null,
       age: userData.age || null,
       last_verified: new Date().toISOString(),
