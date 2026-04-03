@@ -3,6 +3,24 @@ import { callTornApi } from './torn-api.js';
 import { showToast } from './ui/toast.js';
 import { getPlayerId, setPlayerId, navigate } from './main.js';
 
+const COMPANY_TYPES = {
+  1: 'Hair Salon', 2: 'Law Firm', 3: 'Flower Shop', 4: 'Car Dealership',
+  5: 'Clothing Store', 6: 'Gun Shop', 7: 'Game Shop', 8: 'Candle Shop',
+  9: 'Toy Shop', 10: 'Adult Novelties', 11: 'Cyber Cafe', 12: 'Grocery Store',
+  13: 'Theater', 14: 'Sweet Shop', 15: 'Cruise Line', 16: 'Television Network',
+  17: 'Zoo', 18: 'Firework Stand', 19: 'Property Broker', 20: 'Furniture Store',
+  21: 'Gas Station', 22: 'Music Store', 23: 'Nightclub', 24: 'Pub',
+  25: 'Gents Strip Club', 26: 'Restaurant', 27: 'Oil Rig', 28: 'Fitness Center',
+  29: 'Mechanic Shop', 30: 'Amusement Park', 31: 'Lingerie Store',
+  32: 'Meat Warehouse', 33: 'Farm', 34: 'Software Corporation',
+  35: 'Ladies Strip Club', 36: 'Private Security Firm', 37: 'Mining Corporation',
+  38: 'Detective Agency', 39: 'Logistics Management',
+};
+
+function companyTypeName(typeId) {
+  return COMPANY_TYPES[typeId] || '';
+}
+
 export async function renderProfile(container) {
   const playerId = getPlayerId();
   if (!playerId) {
@@ -77,7 +95,7 @@ export async function renderProfile(container) {
           ${player.level ? `<p>Level: <strong>${player.level}</strong></p>` : ''}
           ${player.age ? `<p>Days in Torn: <strong>${Number(player.age).toLocaleString()}</strong></p>` : ''}
           ${player.faction_name ? `<p>Faction: <a href="https://www.torn.com/factions.php?step=profile&ID=${player.faction_id}" target="_blank" rel="noopener" class="info-link">${escapeHtml(player.faction_name)}</a></p>` : '<p>No faction</p>'}
-          ${player.company_name ? `<p>Company: <a href="https://www.torn.com/joblist.php#/p=corpinfo&ID=${player.company_id}" target="_blank" rel="noopener" class="info-link">${escapeHtml(player.company_name)}</a> (${escapeHtml(player.company_role || '')})</p>` : '<p>No company</p>'}
+          ${player.company_name ? `<p>Company: <a href="https://www.torn.com/joblist.php#/p=corpinfo&ID=${player.company_id}" target="_blank" rel="noopener" class="info-link">${escapeHtml(player.company_name)}</a>${player.company_type ? ` <span class="card-company-type">(${escapeHtml(companyTypeName(player.company_type))})</span>` : ''}${player.company_stars ? ` ${'★'.repeat(player.company_stars)}${'☆'.repeat(10 - player.company_stars)}` : ''}${player.company_role ? ` &mdash; ${escapeHtml(player.company_role)}` : ''}</p>` : '<p>No company</p>'}
           <p>Marriage: <strong>${flags.is_single ? 'Single' : 'Married'}</strong></p>
           <p>Property: <strong>${flags.has_island ? 'Private Island' : 'Other'}</strong></p>
           ${player.last_action ? `<p>Last Active: <strong>${timeAgo(player.last_action)}</strong></p>` : ''}
@@ -263,7 +281,7 @@ async function showReceivedDeck(playerId) {
     .from('players')
     .select(`
       torn_player_id, name, faction_id, faction_name,
-      company_id, company_name, company_role, company_type,
+      company_id, company_name, company_role, company_type, company_stars,
       level, age, last_action, manual_labor, intelligence, endurance,
       flags (
         is_single, seeking_marriage,
@@ -448,6 +466,20 @@ async function handleRefresh(playerId) {
   const hasIsland = userData.property === 'Private Island';
   const isDirector = userData.job && userData.job.job === 'Director';
 
+  // Fetch company stars if player has a company
+  let companyStars = null;
+  if (userData.job?.company_id) {
+    const companyData = await callTornApi({
+      section: 'company',
+      id: userData.job.company_id,
+      selections: 'profile',
+      player_id: playerId,
+    });
+    if (companyData?.company?.rating) {
+      companyStars = companyData.company.rating;
+    }
+  }
+
   await supabase.from('players').update({
     name: userData.name,
     faction_id: userData.faction?.faction_id || null,
@@ -456,6 +488,7 @@ async function handleRefresh(playerId) {
     company_name: userData.job?.company_name || null,
     company_role: userData.job?.job || null,
     company_type: userData.job?.company_type || null,
+    company_stars: companyStars,
     level: userData.level || null,
     age: userData.age || null,
     last_action: userData.last_action?.timestamp ? new Date(userData.last_action.timestamp * 1000).toISOString() : null,
