@@ -49,7 +49,8 @@ serve(async (req) => {
         flags!inner (
           is_single, seeking_marriage,
           has_island, island_open, seeking_island,
-          is_director, company_hiring, seeking_job
+          is_director, company_hiring, seeking_job,
+          preferred_company_types
         )
       `)
       .neq('torn_player_id', viewer_id)
@@ -99,20 +100,45 @@ serve(async (req) => {
       ...(dismissedList || []).map((r: any) => r.to_player_id),
     ])
 
-    // Filter by preferred company types for job seekers browsing company category
-    const preferredTypes = viewerFlags?.preferred_company_types as number[] | null
-    const shouldFilterByType = category === 'company' && !viewerFlags?.is_director && preferredTypes && preferredTypes.length > 0
-    const preferredSet = shouldFilterByType ? new Set(preferredTypes) : null
+    // Company type filtering (bidirectional)
+    // - Seekers: only see directors whose company type is in the seeker's preferred list
+    // - Directors: only see seekers who have the director's company type in their preferred list
+    let viewerCompanyType: number | null = null
+    if (category === 'company' && viewerFlags?.is_director) {
+      const { data: viewerPlayer } = await supabase
+        .from('players')
+        .select('company_type')
+        .eq('torn_player_id', viewer_id)
+        .single()
+      viewerCompanyType = viewerPlayer?.company_type ?? null
+    }
+
+    const viewerPreferredTypes = viewerFlags?.preferred_company_types as number[] | null
+    const viewerIsSeeker = category === 'company' && !viewerFlags?.is_director
+    const viewerIsDirector = category === 'company' && viewerFlags?.is_director
+    const seekerPreferredSet = (viewerIsSeeker && viewerPreferredTypes && viewerPreferredTypes.length > 0)
+      ? new Set(viewerPreferredTypes) : null
 
     const filtered = (players || [])
       .filter((p: any) => !swipedIds.has(p.torn_player_id))
       .filter((p: any) => {
-        // If seeker has company type preferences, only show directors with matching company types
-        if (preferredSet && p.company_type) {
-          return preferredSet.has(p.company_type)
+        if (!category.startsWith('company')) return true
+        const pflags = Array.isArray(p.flags) ? p.flags[0] : p.flags
+
+        if (viewerIsSeeker && seekerPreferredSet) {
+          // Seeker with preferences: only show directors whose company type matches
+          return p.company_type && seekerPreferredSet.has(p.company_type)
         }
-        // If no preferences set or director has no type, show all
-        return !preferredSet
+
+        if (viewerIsDirector && viewerCompanyType) {
+          // Director: only show seekers who want the director's company type
+          // Seekers with no preferences (null/empty) are shown to all directors
+          const seekerPrefs = pflags?.preferred_company_types as number[] | null
+          if (!seekerPrefs || seekerPrefs.length === 0) return true
+          return seekerPrefs.includes(viewerCompanyType)
+        }
+
+        return true
       })
       .map((p: any) => ({
         ...p,
