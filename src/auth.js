@@ -129,7 +129,7 @@ async function handleLogin(key) {
     island_open: existingFlags?.island_open ?? false,
     seeking_island: existingFlags?.seeking_island ?? false,
     company_hiring: existingFlags?.company_hiring ?? false,
-    seeking_job: existingFlags?.seeking_job ?? false,
+    seeking_job: existingFlags?.seeking_job ?? (!isDirector),
     preferred_company_types: existingFlags?.preferred_company_types ?? null,
     train_selling: existingFlags?.train_selling ?? false,
     train_buying: existingFlags?.train_buying ?? false,
