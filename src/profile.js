@@ -130,8 +130,8 @@ export async function renderProfile(container) {
           ${renderToggle('seeking_island', 'Seeking island housing', flags.seeking_island, !flags.has_island, '\u{1F3DD}\uFE0F')}
           ${renderToggle('company_hiring', 'Actively hiring', flags.company_hiring, flags.is_director, '\u{1F4BC}')}
           ${renderToggle('seeking_job', 'Looking for work', flags.seeking_job, !flags.is_director, '\u{1F4BC}')}
-          ${renderToggle('train_selling', 'Selling trains', flags.train_selling, flags.is_director, '\u{1F682}')}
-          ${renderToggle('train_buying', 'Looking to buy trains', flags.train_buying, true, '\u{1F682}')}
+          ${renderToggle('train_selling', 'Selling training', flags.train_selling, flags.is_director, '\u{1F3CB}\uFE0F')}
+          ${renderToggle('train_buying', 'Looking to buy training', flags.train_buying, true, '\u{1F3CB}\uFE0F')}
         </div>
 
         ${!flags.is_director ? `

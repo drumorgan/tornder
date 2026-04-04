@@ -18,7 +18,7 @@ function getOptInHint(category) {
     case 'company':
       return 'Enable "Actively hiring" or "Looking for work" on your profile to browse.';
     case 'train':
-      return 'Enable "Selling trains" or "Looking to buy trains" on your profile to browse.';
+      return 'Enable "Selling training" or "Looking to buy training" on your profile to browse.';
     default:
       return '';
   }
@@ -29,7 +29,7 @@ const CATEGORY_LABELS = {
   marriage: '\u{1F48D} Marriage',
   island: '\u{1F3DD}\uFE0F Island',
   company: '\u{1F4BC} Company',
-  train: '\u{1F682} Trains',
+  train: '\u{1F3CB}\uFE0F Training',
 };
 
 let currentCategory = 'marriage';
