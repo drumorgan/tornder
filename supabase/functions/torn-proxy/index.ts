@@ -47,7 +47,6 @@ serve(async (req) => {
       const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
       const { data: secret } = await supabase
-        .schema('private')
         .from('player_secrets')
         .select('api_key_enc, api_key_iv, key_version')
         .eq('torn_player_id', player_id)
@@ -63,7 +62,7 @@ serve(async (req) => {
       apiKey = await decryptApiKey(secret.api_key_enc, secret.api_key_iv, secret.key_version)
 
       // Audit the decryption usage
-      await supabase.schema('private').from('secret_audit_log').insert({
+      await supabase.from('secret_audit_log').insert({
         torn_player_id: player_id,
         action: 'decrypt_used',
         edge_function: 'torn-proxy',
