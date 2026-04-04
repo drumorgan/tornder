@@ -1,4 +1,4 @@
-import { supabase } from './supabase.js';
+import { supabase, supabaseUrl, supabaseAnonKey } from './supabase.js';
 import { callTornApi } from './torn-api.js';
 import { showToast } from './ui/toast.js';
 import { setPlayerId, navigate, updateUserCount } from './main.js';
@@ -30,7 +30,7 @@ export function renderLogin(container) {
           </div>
           <div>
             <p class="tos-heading">KEY STORAGE</p>
-            <p>Stored server-side for auto-login. Never shared. Revoke anytime from Torn settings</p>
+            <p>Encrypted server-side (AES-256) for auto-login. Never shared. Revoke anytime from Torn settings</p>
           </div>
           <div>
             <p class="tos-heading">KEY ACCESS LEVEL</p>
@@ -91,36 +91,29 @@ async function handleLogin(key) {
   const hasIsland = userData.property === 'Private Island';
   const isDirector = userData.job && userData.job.job === 'Director';
 
-  // Step 3: Upsert player row (now stores API key + company_type)
-  const { error: playerErr } = await supabase
-    .from('players')
-    .upsert({
-      torn_player_id: playerId,
-      name: userData.name,
-      faction_id: userData.faction?.faction_id || null,
-      faction_name: userData.faction?.faction_name || null,
-      company_id: userData.job?.company_id || null,
-      company_name: userData.job?.company_name || null,
-      company_role: userData.job?.job || null,
-      company_type: userData.job?.company_type || null,
-      level: userData.level || null,
-      age: userData.age || null,
-      last_action: userData.last_action?.timestamp ? new Date(userData.last_action.timestamp * 1000).toISOString() : null,
-      manual_labor: userData.manual_labor || null,
-      intelligence: userData.intelligence || null,
-      endurance: userData.endurance || null,
-      api_key: key,
-      last_verified: new Date().toISOString(),
-    }, { onConflict: 'torn_player_id' });
+  // Step 3: Build player + flags data, send to set-api-key Edge Function
+  // The Edge Function encrypts the key and stores everything server-side.
+  // The plaintext API key is NEVER written to the DB from the client.
+  const playerData = {
+    torn_player_id: playerId,
+    name: userData.name,
+    faction_id: userData.faction?.faction_id || null,
+    faction_name: userData.faction?.faction_name || null,
+    company_id: userData.job?.company_id || null,
+    company_name: userData.job?.company_name || null,
+    company_role: userData.job?.job || null,
+    company_type: userData.job?.company_type || null,
+    level: userData.level || null,
+    age: userData.age || null,
+    last_action: userData.last_action?.timestamp ? new Date(userData.last_action.timestamp * 1000).toISOString() : null,
+    manual_labor: userData.manual_labor || null,
+    intelligence: userData.intelligence || null,
+    endurance: userData.endurance || null,
+    last_verified: new Date().toISOString(),
+  };
 
-  if (playerErr) {
-    showToast(`Database error: ${playerErr.message}`);
-    btn.disabled = false;
-    btn.textContent = 'Enter';
-    return;
-  }
-
-  // Step 4: Upsert flags (Torn-verified fields only, preserve user opt-ins)
+  // Step 4: Build flags (Torn-verified fields only, preserve user opt-ins)
+  // Fetch existing flags so we can preserve user opt-ins
   const { data: existingFlags } = await supabase
     .from('flags')
     .select('*')
@@ -148,18 +141,30 @@ async function handleLogin(key) {
   if (!isDirector) flagsRow.company_hiring = false;
   if (isDirector) flagsRow.seeking_job = false;
 
-  const { error: flagsErr } = await supabase
-    .from('flags')
-    .upsert(flagsRow, { onConflict: 'torn_player_id' });
+  // Step 5: Send everything to set-api-key (encrypts + stores server-side)
+  const setKeyRes = await fetch(`${supabaseUrl}/functions/v1/set-api-key`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${supabaseAnonKey}`,
+    },
+    body: JSON.stringify({
+      player_id: playerId,
+      api_key: key,
+      player_data: playerData,
+      flags_data: flagsRow,
+    }),
+  });
 
-  if (flagsErr) {
-    showToast(`Database error: ${flagsErr.message}`);
+  const setKeyResult = await setKeyRes.json();
+  if (!setKeyRes.ok || setKeyResult.error) {
+    showToast(`Database error: ${setKeyResult.error || 'Failed to store key'}`);
     btn.disabled = false;
     btn.textContent = 'Enter';
     return;
   }
 
-  // Step 5: Store session
+  // Step 6: Store session
   setPlayerId(playerId);
   updateUserCount();
 

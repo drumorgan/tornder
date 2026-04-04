@@ -1,10 +1,7 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { decryptApiKey } from '../_shared/crypto.ts'
+import { corsHeaders } from '../_shared/cors.ts'
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -23,26 +20,33 @@ serve(async (req) => {
 
     let apiKey = key
 
-    // If no key provided, look it up from DB using player_id
+    // If no key provided, decrypt stored key from player_secrets
     if (!apiKey && player_id) {
       const supabaseUrl = Deno.env.get('SUPABASE_URL')!
       const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
       const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-      const { data: player } = await supabase
-        .from('players')
-        .select('api_key')
+      const { data: secret } = await supabase
+        .from('player_secrets')
+        .select('api_key_enc, api_key_iv, key_version')
         .eq('torn_player_id', player_id)
         .single()
 
-      if (!player?.api_key) {
+      if (!secret?.api_key_enc || !secret?.api_key_iv) {
         return new Response(
           JSON.stringify({ error: { code: 0, error: 'No stored API key. Please log in again.' } }),
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
 
-      apiKey = player.api_key
+      apiKey = await decryptApiKey(secret.api_key_enc, secret.api_key_iv, secret.key_version)
+
+      // Audit the decryption usage
+      await supabase.from('secret_audit_log').insert({
+        torn_player_id: player_id,
+        action: 'decrypt_used',
+        edge_function: 'torn-proxy',
+      })
     }
 
     if (!apiKey) {
