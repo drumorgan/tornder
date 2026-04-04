@@ -5,11 +5,22 @@ import { enableSwipe } from './ui/swipe.js';
 import { getPlayerId, navigate } from './main.js';
 
 const CATEGORIES = ['marriage', 'island', 'company'];
-const OPT_IN_HINTS = {
-  marriage: 'Enable "Seeking marriage" on your profile to browse.',
-  island: 'Enable "Island open to others" or "Seeking island housing" on your profile to browse.',
-  company: 'Enable "Actively hiring" or "Looking for work" on your profile to browse.',
-};
+
+function getOptInHint(category) {
+  if (!viewerFlags) return '';
+  switch (category) {
+    case 'marriage':
+      if (!viewerFlags.is_single)
+        return "You're married! No cheating on your spouse... divorce first, then come back. 💍";
+      return 'Enable "Seeking marriage" on your profile to browse.';
+    case 'island':
+      return 'Enable "Island open to others" or "Seeking island housing" on your profile to browse.';
+    case 'company':
+      return 'Enable "Actively hiring" or "Looking for work" on your profile to browse.';
+    default:
+      return '';
+  }
+}
 
 let viewerFlags = null;
 const CATEGORY_LABELS = {
@@ -33,7 +44,7 @@ export async function renderBrowse(container) {
   // Fetch viewer flags for opt-in hints
   const { data: flags } = await supabase
     .from('flags')
-    .select('seeking_marriage, island_open, seeking_island, company_hiring, seeking_job')
+    .select('is_single, seeking_marriage, island_open, seeking_island, company_hiring, seeking_job')
     .eq('torn_player_id', playerId)
     .single();
   viewerFlags = flags;
@@ -98,7 +109,7 @@ async function loadDeck(playerId) {
         ${optedIn
           ? `<p>You've reached the end of the list for ${currentCategory}!</p>
              <p class="deck-share">Share <a href="https://tornder.girovagabondo.com" target="_blank"><strong>tornder.girovagabondo.com</strong></a> with your faction and friends to grow the community!</p>`
-          : `<p>${OPT_IN_HINTS[currentCategory]}</p>`
+          : `<p>${getOptInHint(currentCategory)}</p>`
         }
       </div>
     `;
