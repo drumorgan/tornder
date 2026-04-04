@@ -23,8 +23,8 @@ export function createCard(player, category) {
   card.className = 'player-card';
   card.dataset.playerId = player.torn_player_id;
 
-  const categoryIcon = { marriage: '\u{1F48D}', island: '\u{1F3DD}\uFE0F', company: '\u{1F4BC}' }[category];
-  const categoryColor = { marriage: '#e94560', island: '#0ea5e9', company: '#f59e0b' }[category] || 'var(--accent)';
+  const categoryIcon = { marriage: '\u{1F48D}', island: '\u{1F3DD}\uFE0F', company: '\u{1F4BC}', train: '\u{1F682}' }[category];
+  const categoryColor = { marriage: '#e94560', island: '#0ea5e9', company: '#f59e0b', train: '#10b981' }[category] || 'var(--accent)';
   const detail = getCategoryDetail(player, category);
   const companyTypeName = player.company_type ? COMPANY_TYPES[player.company_type] : null;
 
@@ -74,6 +74,10 @@ function getCategoryDetail(player, category) {
     case 'company':
       if (player.company_hiring) return `Hiring at ${escapeHtml(player.company_name || 'their company')}`;
       if (player.seeking_job) return 'Looking for work';
+      return '';
+    case 'train':
+      if (player.train_selling) return `Selling trains — ${escapeHtml(player.company_name || 'Director')}`;
+      if (player.train_buying) return 'Looking to buy trains';
       return '';
     default:
       return '';

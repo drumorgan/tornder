@@ -27,7 +27,7 @@ serve(async (req) => {
       )
     }
 
-    if (!['marriage', 'island', 'company'].includes(category)) {
+    if (!['marriage', 'island', 'company', 'train'].includes(category)) {
       return new Response(
         JSON.stringify({ error: 'Invalid category' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -37,7 +37,7 @@ serve(async (req) => {
     // Look up viewer's flags to determine their role for category-specific filtering
     const { data: viewerFlags } = await supabase
       .from('flags')
-      .select('is_single, seeking_marriage, is_director, company_hiring, seeking_job, has_island, island_open, seeking_island, preferred_company_types')
+      .select('is_single, seeking_marriage, is_director, company_hiring, seeking_job, has_island, island_open, seeking_island, preferred_company_types, train_selling, train_buying')
       .eq('torn_player_id', viewer_id)
       .single()
 
@@ -56,6 +56,9 @@ serve(async (req) => {
       case 'company':
         if (!viewerFlags?.company_hiring && !viewerFlags?.seeking_job) return emptyResponse
         break
+      case 'train':
+        if (!viewerFlags?.train_selling && !viewerFlags?.train_buying) return emptyResponse
+        break
     }
 
     // Fetch all players with matching opt-in flags (everyone is visible)
@@ -69,7 +72,8 @@ serve(async (req) => {
           is_single, seeking_marriage,
           has_island, island_open, seeking_island,
           is_director, company_hiring, seeking_job,
-          preferred_company_types
+          preferred_company_types,
+          train_selling, train_buying
         )
       `)
       .neq('torn_player_id', viewer_id)
@@ -95,6 +99,14 @@ serve(async (req) => {
           feedQuery = feedQuery.eq('flags.seeking_job', true)
         } else {
           feedQuery = feedQuery.eq('flags.company_hiring', true)
+        }
+        break
+      case 'train':
+        // Train sellers (directors) see buyers; buyers see sellers
+        if (viewerFlags?.train_selling) {
+          feedQuery = feedQuery.eq('flags.train_buying', true)
+        } else {
+          feedQuery = feedQuery.eq('flags.train_selling', true)
         }
         break
     }
