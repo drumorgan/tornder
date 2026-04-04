@@ -35,9 +35,26 @@ serve(async (req) => {
     // Look up viewer's flags to determine their role for category-specific filtering
     const { data: viewerFlags } = await supabase
       .from('flags')
-      .select('is_director, company_hiring, seeking_job, has_island, island_open, seeking_island, preferred_company_types')
+      .select('is_single, seeking_marriage, is_director, company_hiring, seeking_job, has_island, island_open, seeking_island, preferred_company_types')
       .eq('torn_player_id', viewer_id)
       .single()
+
+    // Only show feed if viewer has opted into the relevant category
+    const emptyResponse = new Response(JSON.stringify([]), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    })
+
+    switch (category) {
+      case 'marriage':
+        if (!viewerFlags?.seeking_marriage) return emptyResponse
+        break
+      case 'island':
+        if (!viewerFlags?.island_open && !viewerFlags?.seeking_island) return emptyResponse
+        break
+      case 'company':
+        if (!viewerFlags?.company_hiring && !viewerFlags?.seeking_job) return emptyResponse
+        break
+    }
 
     // Fetch all players with matching opt-in flags (everyone is visible)
     let feedQuery = supabase

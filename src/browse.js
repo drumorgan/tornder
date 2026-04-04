@@ -5,6 +5,13 @@ import { enableSwipe } from './ui/swipe.js';
 import { getPlayerId, navigate } from './main.js';
 
 const CATEGORIES = ['marriage', 'island', 'company'];
+const OPT_IN_HINTS = {
+  marriage: 'Enable "Seeking marriage" on your profile to browse.',
+  island: 'Enable "Island open to others" or "Seeking island housing" on your profile to browse.',
+  company: 'Enable "Actively hiring" or "Looking for work" on your profile to browse.',
+};
+
+let viewerFlags = null;
 const CATEGORY_LABELS = {
   marriage: '\u{1F48D} Marriage',
   island: '\u{1F3DD}\uFE0F Island',
@@ -22,6 +29,14 @@ export async function renderBrowse(container) {
   }
 
   feedCache = {};
+
+  // Fetch viewer flags for opt-in hints
+  const { data: flags } = await supabase
+    .from('flags')
+    .select('seeking_marriage, island_open, seeking_island, company_hiring, seeking_job')
+    .eq('torn_player_id', playerId)
+    .single();
+  viewerFlags = flags;
 
   container.innerHTML = `
     <div class="screen browse-screen">
@@ -77,16 +92,30 @@ async function loadDeck(playerId) {
   feedCache[currentCategory] = feed;
 
   if (!feed || feed.length === 0) {
+    const optedIn = isOptedIn(currentCategory);
     deckContainer.innerHTML = `
       <div class="deck-empty">
-        <p>You've reached the end of the list for ${currentCategory}!</p>
-        <p class="deck-share">Share <a href="https://tornder.girovagabondo.com" target="_blank"><strong>tornder.girovagabondo.com</strong></a> with your faction and friends to grow the community!</p>
+        ${optedIn
+          ? `<p>You've reached the end of the list for ${currentCategory}!</p>
+             <p class="deck-share">Share <a href="https://tornder.girovagabondo.com" target="_blank"><strong>tornder.girovagabondo.com</strong></a> with your faction and friends to grow the community!</p>`
+          : `<p>${OPT_IN_HINTS[currentCategory]}</p>`
+        }
       </div>
     `;
     return;
   }
 
   showCurrentCard(playerId);
+}
+
+function isOptedIn(category) {
+  if (!viewerFlags) return true;
+  switch (category) {
+    case 'marriage': return viewerFlags.seeking_marriage;
+    case 'island': return viewerFlags.island_open || viewerFlags.seeking_island;
+    case 'company': return viewerFlags.company_hiring || viewerFlags.seeking_job;
+    default: return true;
+  }
 }
 
 function showCurrentCard(playerId) {
