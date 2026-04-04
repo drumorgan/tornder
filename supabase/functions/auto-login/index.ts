@@ -22,8 +22,9 @@ serve(async (req) => {
       )
     }
 
-    // Look up encrypted API key from player_secrets
+    // Look up encrypted API key from private.player_secrets
     const { data: secret, error: secretErr } = await supabase
+      .schema('private')
       .from('player_secrets')
       .select('api_key_enc, api_key_iv, key_version')
       .eq('torn_player_id', player_id)
@@ -40,7 +41,7 @@ serve(async (req) => {
     const apiKey = await decryptApiKey(secret.api_key_enc, secret.api_key_iv, secret.key_version)
 
     // Audit
-    await supabase.from('secret_audit_log').insert({
+    await supabase.schema('private').from('secret_audit_log').insert({
       torn_player_id: player_id,
       action: 'decrypt_used',
       edge_function: 'auto-login',
@@ -55,11 +56,12 @@ serve(async (req) => {
     if (userData.error) {
       // Key revoked or expired — clear encrypted secret
       await supabase
+        .schema('private')
         .from('player_secrets')
         .delete()
         .eq('torn_player_id', player_id)
 
-      await supabase.from('secret_audit_log').insert({
+      await supabase.schema('private').from('secret_audit_log').insert({
         torn_player_id: player_id,
         action: 'cleared',
         edge_function: 'auto-login',

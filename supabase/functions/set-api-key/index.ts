@@ -53,8 +53,9 @@ serve(async (req) => {
       }
     }
 
-    // 4) Store encrypted key in player_secrets
+    // 4) Store encrypted key in private.player_secrets
     const { error: secretErr } = await supabase
+      .schema('private')
       .from('player_secrets')
       .upsert({
         torn_player_id: player_id,
@@ -72,7 +73,7 @@ serve(async (req) => {
     }
 
     // 5) Audit log
-    await supabase.from('secret_audit_log').insert({
+    await supabase.schema('private').from('secret_audit_log').insert({
       torn_player_id: player_id,
       action: 'set',
       edge_function: 'set-api-key',
