@@ -131,6 +131,8 @@ async function handleLogin(key) {
     company_hiring: existingFlags?.company_hiring ?? false,
     seeking_job: existingFlags?.seeking_job ?? false,
     preferred_company_types: existingFlags?.preferred_company_types ?? null,
+    train_selling: existingFlags?.train_selling ?? false,
+    train_buying: existingFlags?.train_buying ?? false,
     updated_at: new Date().toISOString(),
   };
 
@@ -139,6 +141,7 @@ async function handleLogin(key) {
   if (!hasIsland) flagsRow.island_open = false;
   if (hasIsland) flagsRow.seeking_island = false;
   if (!isDirector) flagsRow.company_hiring = false;
+  if (!isDirector) flagsRow.train_selling = false;
   if (isDirector) flagsRow.seeking_job = false;
 
   // Step 5: Send everything to set-api-key (encrypts + stores server-side)

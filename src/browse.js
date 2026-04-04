@@ -4,7 +4,7 @@ import { createCard } from './ui/card.js';
 import { enableSwipe } from './ui/swipe.js';
 import { getPlayerId, navigate } from './main.js';
 
-const CATEGORIES = ['marriage', 'island', 'company'];
+const CATEGORIES = ['marriage', 'island', 'company', 'train'];
 
 function getOptInHint(category) {
   if (!viewerFlags) return '';
@@ -17,6 +17,8 @@ function getOptInHint(category) {
       return 'Enable "Island open to others" or "Seeking island housing" on your profile to browse.';
     case 'company':
       return 'Enable "Actively hiring" or "Looking for work" on your profile to browse.';
+    case 'train':
+      return 'Enable "Selling training" or "Looking to buy training" on your profile to browse.';
     default:
       return '';
   }
@@ -27,6 +29,7 @@ const CATEGORY_LABELS = {
   marriage: '\u{1F48D} Marriage',
   island: '\u{1F3DD}\uFE0F Island',
   company: '\u{1F4BC} Company',
+  train: '\u{1F3CB}\uFE0F Training',
 };
 
 let currentCategory = 'marriage';
@@ -44,7 +47,7 @@ export async function renderBrowse(container) {
   // Fetch viewer flags for opt-in hints
   const { data: flags } = await supabase
     .from('flags')
-    .select('is_single, seeking_marriage, island_open, seeking_island, company_hiring, seeking_job')
+    .select('is_single, seeking_marriage, island_open, seeking_island, company_hiring, seeking_job, train_selling, train_buying')
     .eq('torn_player_id', playerId)
     .single();
   viewerFlags = flags;
@@ -125,6 +128,7 @@ function isOptedIn(category) {
     case 'marriage': return viewerFlags.seeking_marriage;
     case 'island': return viewerFlags.island_open || viewerFlags.seeking_island;
     case 'company': return viewerFlags.company_hiring || viewerFlags.seeking_job;
+    case 'train': return viewerFlags.train_selling || viewerFlags.train_buying;
     default: return true;
   }
 }

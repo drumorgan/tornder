@@ -130,6 +130,8 @@ export async function renderProfile(container) {
           ${renderToggle('seeking_island', 'Seeking island housing', flags.seeking_island, !flags.has_island, '\u{1F3DD}\uFE0F')}
           ${renderToggle('company_hiring', 'Actively hiring', flags.company_hiring, flags.is_director, '\u{1F4BC}')}
           ${renderToggle('seeking_job', 'Looking for work', flags.seeking_job, !flags.is_director, '\u{1F4BC}')}
+          ${renderToggle('train_selling', 'Selling training', flags.train_selling, flags.is_director, '\u{1F3CB}\uFE0F')}
+          ${renderToggle('train_buying', 'Looking to buy training', flags.train_buying, true, '\u{1F3CB}\uFE0F')}
         </div>
 
         ${!flags.is_director ? `
@@ -329,7 +331,8 @@ async function showReceivedDeck(playerId) {
       flags (
         is_single, seeking_marriage,
         has_island, island_open, seeking_island,
-        is_director, company_hiring, seeking_job
+        is_director, company_hiring, seeking_job,
+        train_selling, train_buying
       )
     `)
     .in('torn_player_id', unseenIds);
@@ -566,6 +569,7 @@ async function handleRefresh(playerId) {
   if (!hasIsland) flagUpdate.island_open = false;
   if (hasIsland) flagUpdate.seeking_island = false;
   if (!isDirector) flagUpdate.company_hiring = false;
+  if (!isDirector) flagUpdate.train_selling = false;
   if (isDirector) flagUpdate.seeking_job = false;
 
   await supabase.from('flags').update(flagUpdate).eq('torn_player_id', playerId);
