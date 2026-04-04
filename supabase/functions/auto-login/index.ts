@@ -1,10 +1,7 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { decryptApiKey } from '../_shared/crypto.ts'
+import { corsHeaders } from '../_shared/cors.ts'
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -25,32 +22,48 @@ serve(async (req) => {
       )
     }
 
-    // Look up stored API key (service role bypasses RLS)
-    const { data: player, error: playerErr } = await supabase
-      .from('players')
-      .select('api_key, name')
+    // Look up encrypted API key from player_secrets
+    const { data: secret, error: secretErr } = await supabase
+      .from('player_secrets')
+      .select('api_key_enc, api_key_iv, key_version')
       .eq('torn_player_id', player_id)
       .single()
 
-    if (playerErr || !player?.api_key) {
+    if (secretErr || !secret?.api_key_enc || !secret?.api_key_iv) {
       return new Response(
         JSON.stringify({ error: 'no_key' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
+    // Decrypt the stored key
+    const apiKey = await decryptApiKey(secret.api_key_enc, secret.api_key_iv, secret.key_version)
+
+    // Audit
+    await supabase.from('secret_audit_log').insert({
+      torn_player_id: player_id,
+      action: 'decrypt_used',
+      edge_function: 'auto-login',
+    })
+
     // Verify key is still valid
     const tornRes = await fetch(
-      `https://api.torn.com/user/?selections=basic,profile,properties&key=${player.api_key}`
+      `https://api.torn.com/user/?selections=basic,profile,properties&key=${apiKey}`
     )
     const userData = await tornRes.json()
 
     if (userData.error) {
-      // Key revoked or expired — clear it
+      // Key revoked or expired — clear encrypted secret
       await supabase
-        .from('players')
-        .update({ api_key: null })
+        .from('player_secrets')
+        .delete()
         .eq('torn_player_id', player_id)
+
+      await supabase.from('secret_audit_log').insert({
+        torn_player_id: player_id,
+        action: 'cleared',
+        edge_function: 'auto-login',
+      })
 
       return new Response(
         JSON.stringify({ error: 'key_invalid', torn_error: userData.error }),
@@ -68,7 +81,7 @@ serve(async (req) => {
     if (userData.job?.company_id) {
       try {
         const companyRes = await fetch(
-          `https://api.torn.com/company/${userData.job.company_id}?selections=profile&key=${player.api_key}`
+          `https://api.torn.com/company/${userData.job.company_id}?selections=profile&key=${apiKey}`
         )
         const companyData = await companyRes.json()
         if (companyData && !companyData.error && companyData.company?.rating) {
