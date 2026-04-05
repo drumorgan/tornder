@@ -2,7 +2,7 @@
 
 ## Deployment
 
-- **Always push changes all the way through**: After committing and pushing to a branch, use the GitHub MCP tools (`mcp__github__create_pull_request` and `mcp__github__merge_pull_request`) to create a pull request and merge it to main yourself. Do not leave changes sitting on a feature branch or ask the user to manually create/merge PRs.
+- **Always push changes all the way through**: After committing and pushing to a branch, create a pull request and merge it to main yourself. Use the GitHub REST API via `curl` against `https://api.github.com/repos/drumorgan/tornder` (authenticated with the `GITHUB_TOKEN` env var) to create and merge PRs. If MCP tools like `mcp__github__create_pull_request` are available, prefer those instead. Do not leave changes sitting on a feature branch or ask the user to manually create/merge PRs.
 - **Supabase migrations**: After merging SQL migration files, remind the user to run the SQL manually in the Supabase Dashboard SQL Editor, since migrations are not auto-applied.
 
 ## Tech Stack
