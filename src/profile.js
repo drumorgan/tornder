@@ -172,7 +172,7 @@ export async function renderProfile(container) {
         <p class="giro-box-title">More Torn tools by Giro Vagabondo</p>
         <a href="https://happyjump.girovagabondo.com" target="_blank" rel="noopener" class="giro-box-link">HappyJump</a> &mdash; Insured happy jumping
         <br/>
-        <a href="https://yoinkadventure.com" target="_blank" rel="noopener" class="giro-box-link">Yoink Adventure</a> &mdash; ${['Turn your travels into a real-world game','Start collecting your world — on a map','A travel tracker that feels like a game','Collect your adventures. See them on a map.','Explore the world like a game board'][Math.floor(Math.random() * 5)]}
+        <a href="https://yoinkadventure.com" target="_blank" rel="noopener" class="giro-box-link">Yoink Adventures</a> &mdash; ${['Turn your travels into a real-world game','Start collecting your world — on a map','A travel tracker that feels like a game','Collect your adventures. See them on a map.','Explore the world like a game board'][Math.floor(Math.random() * 5)]}
       </div>
     </div>
   `;
