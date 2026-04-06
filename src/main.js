@@ -106,6 +106,37 @@ async function updateUserCount() {
     el.textContent = `${count} Torn Citizen${count !== 1 ? 's' : ''} and counting`;
   }
 }
-updateUserCount();
 
-export { updateUserCount };
+// Update love connections count in header
+async function updateLoveConnections() {
+  const { data: allInterests } = await supabase
+    .from('interests')
+    .select('from_player_id, to_player_id, category');
+
+  let matchCount = 0;
+  if (allInterests) {
+    // Build a set of all interest keys for O(1) lookup
+    const interestKeys = new Set(
+      allInterests.map(i => `${i.from_player_id}-${i.to_player_id}-${i.category}`)
+    );
+    // Count pairs where the reverse also exists (count each pair once)
+    const counted = new Set();
+    for (const i of allInterests) {
+      const pairKey = [Math.min(i.from_player_id, i.to_player_id), Math.max(i.from_player_id, i.to_player_id), i.category].join('-');
+      if (!counted.has(pairKey) && interestKeys.has(`${i.to_player_id}-${i.from_player_id}-${i.category}`)) {
+        matchCount++;
+        counted.add(pairKey);
+      }
+    }
+  }
+
+  const el = document.getElementById('love-connections');
+  if (el) {
+    el.textContent = `\u{1F495} ${matchCount} Love Connection${matchCount !== 1 ? 's' : ''} made`;
+  }
+}
+
+updateUserCount();
+updateLoveConnections();
+
+export { updateUserCount, updateLoveConnections };
