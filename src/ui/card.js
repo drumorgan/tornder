@@ -4,7 +4,7 @@ const COMPANY_TYPES = {
   9: 'Toy Shop', 10: 'Adult Novelties', 11: 'Cyber Cafe', 12: 'Grocery Store',
   13: 'Theater', 14: 'Sweet Shop', 15: 'Cruise Line', 16: 'Television Network',
   17: 'Zoo', 18: 'Firework Stand', 19: 'Property Broker', 20: 'Furniture Store',
-  21: 'Gas Station', 22: 'Music Store', 23: 'Nightclub', 24: 'Pub',
+  21: 'Gas Station', 22: 'Nightclub', 23: 'Music Store', 24: 'Pub',
   25: 'Gents Strip Club', 26: 'Restaurant', 27: 'Oil Rig', 28: 'Fitness Center',
   29: 'Mechanic Shop', 30: 'Amusement Park', 31: 'Lingerie Store',
   32: 'Meat Warehouse', 33: 'Farm', 34: 'Software Corporation',
