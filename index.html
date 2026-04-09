@@ -10,7 +10,8 @@
   <div id="app">
     <header id="app-header">
       <h1 class="logo">Tornder</h1>
-      <p class="logo-subtitle">by <a href="https://www.torn.com/profiles.php?XID=3667375" target="_blank" rel="noopener" class="giro-link">Giro Vagabondo</a></p>
+      <p class="logo-subtitle">Swipe your way through Torn City</p>
+      <p class="logo-credit">by <a href="https://www.torn.com/profiles.php?XID=3667375" target="_blank" rel="noopener" class="giro-link">Giro Vagabondo</a></p>
       <p id="user-count" class="user-count"></p>
       <p id="love-connections" class="user-count"></p>
       <nav id="main-nav" class="hidden">
@@ -20,8 +21,29 @@
       </nav>
     </header>
     <main id="screen-container"></main>
+    <div class="crosslink-box">
+      <div class="crosslink-label">More Torn tools by Giro Vagabondo</div>
+      <div class="crosslink-list">
+        <div><a href="https://happyjump.girovagabondo.com" target="_blank" rel="noopener" class="crosslink-link crosslink-happyjump">HappyJump</a> &mdash; Insured drug packages for Torn City</div>
+        <div><a href="https://valigia.girovagabondo.com" target="_blank" rel="noopener" class="crosslink-link crosslink-valigia">Valigia</a> &mdash; Torn City Travel Arbitrage</div>
+        <div><a href="https://yoinkadventures.com" target="_blank" rel="noopener" class="crosslink-link crosslink-yoink">Yoink Adventures</a> &mdash; <span id="yoink-tagline"></span></div>
+      </div>
+    </div>
   </div>
   <div id="toast-container"></div>
+  <script>
+    (() => {
+      const tags = [
+        'Turn your travels into a real-world game',
+        'Start collecting your world — on a map',
+        'A travel tracker that feels like a game',
+        'Collect your adventures. See them on a map.',
+        'Explore the world like a game board'
+      ];
+      const el = document.getElementById('yoink-tagline');
+      if (el) el.textContent = tags[Math.floor(Math.random() * tags.length)];
+    })();
+  </script>
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>

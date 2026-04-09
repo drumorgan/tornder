@@ -9,8 +9,9 @@
   --bg: #1a1a2e;
   --bg-card: #16213e;
   --bg-input: #0f3460;
-  --accent: #e94560;
-  --accent-hover: #ff6b81;
+  --accent: #3de8c8;        /* Tornder teal — fresh, modern matchmaker */
+  --accent-hover: #6eedce;
+  --accent-fg: #0b1f2b;     /* dark foreground for text on accent bg */
   --text: #eee;
   --text-muted: #999;
   --success: #2ecc71;
@@ -47,18 +48,23 @@ html, body {
 }
 
 .logo-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+
+.logo-credit {
   font-size: 0.7rem;
   color: var(--text-muted);
-  margin-top: 0;
+  margin-top: 0.2rem;
 }
 
 .giro-link {
-  color: var(--text-muted);
+  color: var(--accent);
   text-decoration: none;
 }
 
 .giro-link:hover {
-  color: var(--accent);
   text-decoration: underline;
 }
 
@@ -88,7 +94,7 @@ html, body {
 
 .nav-btn.active {
   background: var(--accent);
-  color: white;
+  color: var(--accent-fg);
   border-color: var(--accent);
 }
 
@@ -216,8 +222,9 @@ html, body {
 
 .btn-primary {
   background: var(--accent);
-  color: white;
+  color: var(--accent-fg);
   width: 100%;
+  font-weight: 700;
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -240,7 +247,7 @@ html, body {
   height: 44px;
   border-radius: 50%;
   background: var(--accent);
-  color: white;
+  color: var(--accent-fg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -526,7 +533,7 @@ html, body {
 
 .tab-btn.active {
   background: var(--accent);
-  color: white;
+  color: var(--accent-fg);
   border-color: var(--accent);
 }
 
@@ -644,11 +651,11 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(233, 69, 96, 0.9);
+  background: rgba(61, 232, 200, 0.9);
   border-radius: var(--radius);
   font-size: 1.5rem;
   font-weight: 700;
-  color: white;
+  color: #0b1f2b;
 }
 
 /* Swipe hints */
@@ -833,36 +840,46 @@ html, body {
   line-height: 1.4;
 }
 
-/* === Giro Box (cross-promotion) === */
-.giro-box {
+/* === Cross-link box — shared pattern across Giro's Torn tools === */
+.crosslink-box {
+  margin: 2rem 1rem 1.5rem;
+  padding: 1.5rem 1.5rem 1.25rem;
   background: var(--bg-card);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: var(--radius);
-  padding: 1rem 1.25rem;
-  margin-top: 1rem;
   text-align: center;
-  font-size: 0.85rem;
   color: var(--text-muted);
-  width: 100%;
+  font-size: 0.85rem;
 }
 
-.giro-box-title {
+.crosslink-label {
   font-size: 0.7rem;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.18em;
   color: var(--text-muted);
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.85rem;
 }
 
-.giro-box-link {
-  color: var(--accent);
+.crosslink-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.crosslink-link {
   text-decoration: none;
-  font-weight: 600;
+  font-weight: 700;
 }
 
-.giro-box-link:hover {
+.crosslink-link:hover {
   text-decoration: underline;
 }
+
+/* Target-app colors — each Giro tool has its own distinct accent */
+.crosslink-valigia   { color: #e8c84a; }  /* Valigia gold */
+.crosslink-happyjump { color: #e94560; }  /* HappyJump coral */
+.crosslink-tornder   { color: #3de8c8; }  /* Tornder teal */
+.crosslink-yoink     { color: #c0c4cc; }  /* Yoink neutral */
 
 /* === Stat Deck Overlay (Interested in You swipe) === */
 .stat-deck-content {
