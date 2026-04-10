@@ -38,11 +38,6 @@ export function renderLogin(container) {
           </div>
         </div>
       </div>
-
-      <div class="giro-box">
-        <p class="giro-box-title">More Torn tools by Giro Vagabondo</p>
-        <a href="https://happyjump.girovagabondo.com" target="_blank" rel="noopener" class="giro-box-link">HappyJump</a> &mdash; Insured happy jumping
-      </div>
     </div>
   `;
 
