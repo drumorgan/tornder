@@ -2,6 +2,7 @@ import { supabase } from './supabase.js';
 import { callTornApi } from './torn-api.js';
 import { showToast } from './ui/toast.js';
 import { getPlayerId, setPlayerId, navigate } from './main.js';
+import { isInterestActive, fetchFlagsMap } from './utils/interestActive.js';
 
 const COMPANY_TYPES = {
   1: 'Hair Salon', 2: 'Law Firm', 3: 'Flower Shop', 4: 'Car Dealership',
@@ -34,12 +35,12 @@ export async function renderProfile(container) {
     </div>
   `;
 
-  // Fetch player + flags + stats
-  const [{ data: player }, { data: flags }, { count: sentCount }, { count: receivedCount }] = await Promise.all([
+  // Fetch player + own flags + raw interests
+  const [{ data: player }, { data: flags }, { data: sentInterests }, { data: receivedInterests }] = await Promise.all([
     supabase.from('players').select('*').eq('torn_player_id', playerId).single(),
     supabase.from('flags').select('*').eq('torn_player_id', playerId).single(),
-    supabase.from('interests').select('*', { count: 'exact', head: true }).eq('from_player_id', playerId),
-    supabase.from('interests').select('*', { count: 'exact', head: true }).eq('to_player_id', playerId),
+    supabase.from('interests').select('to_player_id, category').eq('from_player_id', playerId),
+    supabase.from('interests').select('from_player_id, category').eq('to_player_id', playerId),
   ]);
 
   if (!player || !flags) {
@@ -48,22 +49,32 @@ export async function renderProfile(container) {
     return;
   }
 
-  // Count mutual matches (where both swiped right)
-  const { data: myInterests } = await supabase
-    .from('interests')
-    .select('to_player_id')
-    .eq('from_player_id', playerId);
+  // An interest only counts while the sender's opt-in flag for that category
+  // is still on. Toggling a flag off hides those interests; toggling on
+  // restores them. Fetch every counterparty's flags in one batch.
+  const counterpartyIds = [
+    ...(sentInterests || []).map(r => r.to_player_id),
+    ...(receivedInterests || []).map(r => r.from_player_id),
+  ];
+  const flagsById = await fetchFlagsMap(supabase, counterpartyIds);
+  flagsById.set(Number(playerId), flags);
 
-  let matchCount = 0;
-  if (myInterests && myInterests.length > 0) {
-    const myTargets = myInterests.map(r => r.to_player_id);
-    const { count } = await supabase
-      .from('interests')
-      .select('*', { count: 'exact', head: true })
-      .eq('to_player_id', playerId)
-      .in('from_player_id', myTargets);
-    matchCount = count || 0;
-  }
+  const activeSent = (sentInterests || []).filter(r =>
+    isInterestActive(flags, r.category)
+  );
+  const activeReceived = (receivedInterests || []).filter(r =>
+    isInterestActive(flagsById.get(r.from_player_id), r.category)
+  );
+  const sentCount = activeSent.length;
+  const receivedCount = activeReceived.length;
+
+  // Mutual matches: both sides must currently be opted-in for the category.
+  const reverseKey = new Set(
+    activeReceived.map(r => `${r.from_player_id}-${r.category}`)
+  );
+  const matchCount = activeSent.filter(r =>
+    reverseKey.has(`${r.to_player_id}-${r.category}`)
+  ).length;
 
   const initial = (player.name || '?')[0].toUpperCase();
 
@@ -220,28 +231,48 @@ async function showStatList(stat, playerId) {
   let title = '';
   let playerIds = [];
 
+  // Fetch my current flags once — interests I've "sent" only count as active
+  // if my current opt-in flag for their category is still on.
+  const { data: myFlags } = await supabase
+    .from('flags')
+    .select('seeking_marriage, island_open, seeking_island, company_hiring, seeking_job, train_selling, train_buying')
+    .eq('torn_player_id', playerId)
+    .single();
+
   if (stat === 'matches') {
     title = 'Your Matches';
     const { data: sent } = await supabase
       .from('interests')
-      .select('to_player_id')
+      .select('to_player_id, category')
       .eq('from_player_id', playerId);
-    if (sent && sent.length > 0) {
-      const targets = sent.map(r => r.to_player_id);
+    const activeSent = (sent || []).filter(r => isInterestActive(myFlags, r.category));
+    if (activeSent.length > 0) {
+      const targets = activeSent.map(r => r.to_player_id);
       const { data: mutual } = await supabase
         .from('interests')
-        .select('from_player_id')
+        .select('from_player_id, category')
         .eq('to_player_id', playerId)
         .in('from_player_id', targets);
-      playerIds = (mutual || []).map(r => r.from_player_id);
+      // Only count mutuals where the other side is still opted-in AND I still
+      // have my matching-direction interest active for that category.
+      const mutualFlags = await fetchFlagsMap(supabase, (mutual || []).map(r => r.from_player_id));
+      const sentKey = new Set(activeSent.map(r => `${r.to_player_id}-${r.category}`));
+      playerIds = (mutual || [])
+        .filter(r =>
+          isInterestActive(mutualFlags.get(r.from_player_id), r.category) &&
+          sentKey.has(`${r.from_player_id}-${r.category}`)
+        )
+        .map(r => r.from_player_id);
     }
   } else if (stat === 'sent') {
     title = 'Interests Sent';
     const { data } = await supabase
       .from('interests')
-      .select('to_player_id')
+      .select('to_player_id, category')
       .eq('from_player_id', playerId);
-    playerIds = (data || []).map(r => r.to_player_id);
+    playerIds = (data || [])
+      .filter(r => isInterestActive(myFlags, r.category))
+      .map(r => r.to_player_id);
   }
 
   playerIds = [...new Set(playerIds)];
@@ -297,7 +328,20 @@ async function showReceivedDeck(playerId) {
     return;
   }
 
-  const receivedIds = [...new Set(received.map(r => r.from_player_id))];
+  // Keep only interests whose sender currently has the relevant opt-in flag
+  // on. If someone toggled off (e.g. "Looking for work" after finding a job),
+  // their interest is hidden here until they toggle it back on.
+  const senderFlags = await fetchFlagsMap(supabase, received.map(r => r.from_player_id));
+  const activeReceived = received.filter(r =>
+    isInterestActive(senderFlags.get(r.from_player_id), r.category)
+  );
+
+  if (activeReceived.length === 0) {
+    showToast('No one currently looking — they may have toggled off');
+    return;
+  }
+
+  const receivedIds = [...new Set(activeReceived.map(r => r.from_player_id))];
 
   // Filter out players I've already acted on (in interests or dismissed)
   const [{ data: myInterests }, { data: myDismissed }] = await Promise.all([
@@ -346,7 +390,7 @@ async function showReceivedDeck(playerId) {
 
   // Build the category map — what category did they express interest in?
   const categoryMap = {};
-  for (const r of received) {
+  for (const r of activeReceived) {
     if (!categoryMap[r.from_player_id]) categoryMap[r.from_player_id] = r.category;
   }
 

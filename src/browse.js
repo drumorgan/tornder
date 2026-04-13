@@ -3,6 +3,7 @@ import { showToast } from './ui/toast.js';
 import { createCard } from './ui/card.js';
 import { enableSwipe } from './ui/swipe.js';
 import { getPlayerId, navigate } from './main.js';
+import { isInterestActive } from './utils/interestActive.js';
 
 const CATEGORIES = ['marriage', 'island', 'company', 'train'];
 
@@ -226,7 +227,8 @@ async function recordInterest(fromId, toId, category, player) {
     return;
   }
 
-  // Check for mutual match
+  // Check for mutual match — but only count the other side's interest if
+  // they're still opted-in for this category (their toggle is still on).
   const { data: mutual } = await supabase
     .from('interests')
     .select('id')
@@ -236,7 +238,14 @@ async function recordInterest(fromId, toId, category, player) {
     .single();
 
   if (mutual) {
-    showMatchOverlay(player);
+    const { data: otherFlags } = await supabase
+      .from('flags')
+      .select('seeking_marriage, island_open, seeking_island, company_hiring, seeking_job, train_selling, train_buying')
+      .eq('torn_player_id', toId)
+      .single();
+    if (isInterestActive(otherFlags, category)) {
+      showMatchOverlay(player);
+    }
   }
 }
 
