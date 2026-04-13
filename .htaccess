@@ -1,0 +1,25 @@
+# Prevent aggressive browser caching of the app's source files.
+#
+# Tornder is vanilla ES modules served directly from cPanel — there is
+# no bundler and no content-hashed filenames. Without explicit cache
+# headers, browsers (Safari especially) will cache individual module
+# files for long and unpredictable durations. On deploy this leads to
+# "Frankenstein" sessions where, for example, a user's Safari runs the
+# new main.js but a cached old auth.js — breaking subtle invariants
+# like "a successful login stores a session_token in localStorage".
+#
+# no-cache (counterintuitively) does NOT mean "do not cache". It means
+# "revalidate with the server before using the cached copy". If the
+# file is unchanged the server responds 304 Not Modified and the
+# browser reuses cached bytes — so throughput is unaffected. If the
+# file has changed, the browser picks up the new version immediately.
+
+<IfModule mod_headers.c>
+  <FilesMatch "\.(js|mjs|css)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+
+  <FilesMatch "\.(html|htm)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+</IfModule>
