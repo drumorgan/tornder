@@ -529,6 +529,43 @@ async function saveCompanyTypePrefs(playerId) {
   }
 }
 
+// Computes active sent/received/match counts for a player, honoring the
+// "interest is active only while the sender's opt-in flag is on" rule.
+async function computeActiveCounts(playerId) {
+  const [{ data: flags }, { data: sentInterests }, { data: receivedInterests }] = await Promise.all([
+    supabase.from('flags').select('*').eq('torn_player_id', playerId).single(),
+    supabase.from('interests').select('to_player_id, category').eq('from_player_id', playerId),
+    supabase.from('interests').select('from_player_id, category').eq('to_player_id', playerId),
+  ]);
+
+  if (!flags) return { sentCount: 0, receivedCount: 0, matchCount: 0 };
+
+  const senderFlagsById = await fetchFlagsMap(
+    supabase,
+    (receivedInterests || []).map(r => r.from_player_id)
+  );
+
+  const activeSent = (sentInterests || []).filter(r => isInterestActive(flags, r.category));
+  const activeReceived = (receivedInterests || []).filter(r =>
+    isInterestActive(senderFlagsById.get(r.from_player_id), r.category)
+  );
+  const reverseKey = new Set(activeReceived.map(r => `${r.from_player_id}-${r.category}`));
+  const matchCount = activeSent.filter(r => reverseKey.has(`${r.to_player_id}-${r.category}`)).length;
+
+  return { sentCount: activeSent.length, receivedCount: activeReceived.length, matchCount };
+}
+
+function writeStatCounts(container, { sentCount, receivedCount, matchCount }) {
+  const root = container || document;
+  const set = (stat, val) => {
+    const el = root.querySelector(`.stat-item[data-stat="${stat}"] .stat-value`);
+    if (el) el.textContent = String(val);
+  };
+  set('matches', matchCount);
+  set('received', receivedCount);
+  set('sent', sentCount);
+}
+
 async function handleToggle(toggle, playerId) {
   const field = toggle.dataset.field;
   if (!field) return;
@@ -541,8 +578,18 @@ async function handleToggle(toggle, playerId) {
   if (error) {
     showToast(`Failed to update: ${error.message}`);
     toggle.checked = !toggle.checked;
-  } else {
-    showToast('Flag updated', 'success');
+    return;
+  }
+
+  showToast('Flag updated', 'success');
+
+  // Toggling an opt-in flag changes which interests count as "active", so
+  // refresh the three stat counts in place without re-rendering the page.
+  try {
+    const counts = await computeActiveCounts(playerId);
+    writeStatCounts(document, counts);
+  } catch (e) {
+    // Non-fatal: counts will refresh on next page load.
   }
 }
 
