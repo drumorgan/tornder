@@ -1,7 +1,7 @@
 import { supabase } from './supabase.js';
 import { callTornApi } from './torn-api.js';
 import { showToast } from './ui/toast.js';
-import { getPlayerId, setPlayerId, navigate } from './main.js';
+import { getPlayerId, clearSession, navigate } from './main.js';
 import { isInterestActive, fetchFlagsMap } from './utils/interestActive.js';
 
 const COMPANY_TYPES = {
@@ -705,7 +705,7 @@ async function handleDeleteData(playerId) {
   }
 
   // Clear local session
-  setPlayerId(null);
+  clearSession();
   showToast('All your data has been permanently deleted.', 'info');
   navigate('login');
 }
