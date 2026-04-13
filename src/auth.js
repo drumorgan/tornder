@@ -1,7 +1,7 @@
 import { supabase, supabaseUrl, supabaseAnonKey } from './supabase.js';
 import { callTornApi } from './torn-api.js';
 import { showToast } from './ui/toast.js';
-import { setPlayerId, navigate, updateUserCount } from './main.js';
+import { setPlayerId, setSessionToken, navigate, updateUserCount } from './main.js';
 
 export function renderLogin(container) {
   container.innerHTML = `
@@ -161,9 +161,18 @@ async function handleLogin(key) {
     btn.textContent = 'Enter';
     return;
   }
+  if (!setKeyResult.session_token) {
+    showToast('Server did not issue a session token. Please try again.');
+    btn.disabled = false;
+    btn.textContent = 'Enter';
+    return;
+  }
 
-  // Step 6: Store session
+  // Step 6: Store session (player_id + server-issued session token). Both
+  // are required to auto-login; without the token, knowing a player_id is
+  // not enough for impersonation.
   setPlayerId(playerId);
+  setSessionToken(setKeyResult.session_token);
   updateUserCount();
 
   showToast(`Welcome, ${userData.name}!`, 'success');

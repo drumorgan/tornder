@@ -27,6 +27,24 @@ async function encryptApiKey(plaintext: string, keyVersion = 1) {
   return { ciphertext: bytesToBase64(new Uint8Array(encrypted)), iv: bytesToBase64(iv), keyVersion }
 }
 
+// --- Session token helpers ---
+// URL-safe base64 (no padding) for compact localStorage storage.
+function bytesToBase64Url(bytes: Uint8Array): string {
+  return btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '')
+}
+function generateSessionToken(): string {
+  return bytesToBase64Url(crypto.getRandomValues(new Uint8Array(32)))
+}
+async function sha256Hex(input: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input))
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -46,8 +64,14 @@ serve(async (req) => {
       )
     }
 
-    // 1) Encrypt the API key
+    // 1) Encrypt the API key and mint a fresh session token.
+    // The raw token is returned to the client exactly once; we store only
+    // its SHA-256 hash, so a DB leak does not hand attackers live sessions.
+    // Minting a fresh token on every set-api-key call also logs out any
+    // previously-authenticated device for this player.
     const { ciphertext, iv, keyVersion } = await encryptApiKey(api_key)
+    const sessionToken = generateSessionToken()
+    const sessionTokenHash = await sha256Hex(sessionToken)
 
     // 2) Upsert player profile data (without api_key)
     if (player_data) {
@@ -77,7 +101,8 @@ serve(async (req) => {
       }
     }
 
-    // 4) Store encrypted key in player_secrets
+    // 4) Store encrypted key + session token hash in player_secrets
+    const nowIso = new Date().toISOString()
     const { error: secretErr } = await supabase
       .from('player_secrets')
       .upsert({
@@ -85,7 +110,9 @@ serve(async (req) => {
         api_key_enc: ciphertext,
         api_key_iv: iv,
         key_version: keyVersion,
-        updated_at: new Date().toISOString(),
+        session_token_hash: sessionTokenHash,
+        session_token_created_at: nowIso,
+        updated_at: nowIso,
       }, { onConflict: 'torn_player_id' })
 
     if (secretErr) {
@@ -102,8 +129,10 @@ serve(async (req) => {
       edge_function: 'set-api-key',
     })
 
+    // Return the raw session token to the client exactly once. The client
+    // must store it alongside player_id and present both on auto-login.
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({ success: true, session_token: sessionToken }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (err) {

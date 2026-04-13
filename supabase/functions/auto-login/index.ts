@@ -23,6 +23,23 @@ async function decryptApiKey(ciphertextB64: string, ivB64: string, _keyVersion =
   return new TextDecoder().decode(decrypted)
 }
 
+// --- Session token verification helpers ---
+async function sha256Hex(input: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input))
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+}
+// Constant-time string comparison to avoid timing oracles on the token hash.
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
+  let diff = 0
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  }
+  return diff === 0
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -33,25 +50,41 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    const { player_id } = await req.json()
+    const { player_id, session_token } = await req.json()
 
-    if (!player_id) {
+    // Both fields are required. Without the session token, anyone knowing a
+    // victim's Torn player_id could previously impersonate them here.
+    if (!player_id || !session_token || typeof session_token !== 'string') {
       return new Response(
-        JSON.stringify({ error: 'Missing player_id' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Look up encrypted API key from player_secrets
+    // Look up encrypted API key + stored token hash from player_secrets
     const { data: secret, error: secretErr } = await supabase
       .from('player_secrets')
-      .select('api_key_enc, api_key_iv, key_version')
+      .select('api_key_enc, api_key_iv, key_version, session_token_hash')
       .eq('torn_player_id', player_id)
       .single()
 
     if (secretErr || !secret?.api_key_enc || !secret?.api_key_iv) {
       return new Response(
         JSON.stringify({ error: 'no_key' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Verify the session token BEFORE decrypting. If verification fails we
+    // return a generic 401 and do not leak whether the player_id is
+    // registered, and we never touch the encrypted key.
+    const providedHash = await sha256Hex(session_token)
+    if (
+      !secret.session_token_hash ||
+      !timingSafeEqual(providedHash, secret.session_token_hash)
+    ) {
+      return new Response(
+        JSON.stringify({ error: 'unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }

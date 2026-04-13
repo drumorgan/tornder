@@ -19,6 +19,23 @@ export function setPlayerId(id) {
   else localStorage.removeItem('tornder_player_id');
 }
 
+// Session token issued by `set-api-key`. Must be sent alongside player_id
+// on auto-login so the server can verify this browser actually owns the
+// account — knowing someone's Torn player_id is no longer enough.
+export function getSessionToken() {
+  return localStorage.getItem('tornder_session_token');
+}
+
+export function setSessionToken(token) {
+  if (token) localStorage.setItem('tornder_session_token', String(token));
+  else localStorage.removeItem('tornder_session_token');
+}
+
+export function clearSession() {
+  setPlayerId(null);
+  setSessionToken(null);
+}
+
 export function navigate(screen) {
   container.innerHTML = '';
   currentScreen = screen;
@@ -51,15 +68,19 @@ navButtons.forEach(btn => {
 });
 
 document.getElementById('logout-btn').addEventListener('click', () => {
-  setPlayerId(null);
+  clearSession();
   showToast('Logged out', 'info');
   navigate('login');
 });
 
-// Boot: try auto-login if we have a stored player_id
+// Boot: try auto-login if we have a stored player_id + session token.
+// Hard cutover from the old session shape: if either is missing (e.g.
+// pre-token-fix install), force re-entry of the API key.
 async function boot() {
   const existingId = getPlayerId();
-  if (!existingId) {
+  const sessionToken = getSessionToken();
+  if (!existingId || !sessionToken) {
+    clearSession();
     navigate('login');
     return;
   }
@@ -73,7 +94,10 @@ async function boot() {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${supabaseAnonKey}`,
       },
-      body: JSON.stringify({ player_id: Number(existingId) }),
+      body: JSON.stringify({
+        player_id: Number(existingId),
+        session_token: sessionToken,
+      }),
     });
 
     const data = await res.json();
@@ -82,9 +106,11 @@ async function boot() {
       showToast(`Welcome back, ${data.name}!`, 'success');
       navigate('profile');
     } else {
-      setPlayerId(null);
+      clearSession();
       if (data.error === 'key_invalid') {
         showToast('Your API key expired or was revoked. Please log in again.');
+      } else if (data.error === 'unauthorized') {
+        showToast('Session expired. Please log in again.');
       }
       navigate('login');
     }
