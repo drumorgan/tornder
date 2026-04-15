@@ -2,9 +2,11 @@ import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 // --- Inlined CORS ---
-const ALLOWED_ORIGIN = Deno.env.get('ALLOWED_ORIGIN') || 'https://tornder.girovagabondo.com'
+// Open origin (matches Valigia). We rely on the Supabase anon key + our
+// session-token hash for auth; origin pinning via CORS was just causing
+// silent auto-login failures from preview URLs / alternate hostnames.
 const corsHeaders: Record<string, string> = {
-  'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
+  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
@@ -99,28 +101,57 @@ serve(async (req) => {
       edge_function: 'auto-login',
     })
 
-    // Verify key is still valid
-    const tornRes = await fetch(
-      `https://api.torn.com/user/?selections=basic,profile,properties&key=${apiKey}`
-    )
-    const userData = await tornRes.json()
+    // Verify key is still valid. Trimmed to `basic,profile` (was
+    // `basic,profile,properties`) — `properties` was never used and the
+    // company-stars second fetch was moved out, cutting the surface area
+    // where a transient Torn hiccup could flake the login.
+    let userData: any
+    try {
+      const tornRes = await fetch(
+        `https://api.torn.com/user/?selections=basic,profile&key=${apiKey}`
+      )
+      userData = await tornRes.json()
+    } catch (err) {
+      // Network / DNS failure talking to Torn. Transient — keep the row.
+      return new Response(
+        JSON.stringify({ success: false, error: 'torn_unavailable', detail: (err as Error).message }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
     if (userData.error) {
-      // Key revoked or expired — clear encrypted secret
-      await supabase
-        .from('player_secrets')
-        .delete()
-        .eq('torn_player_id', player_id)
+      // Torn error codes that mean the key itself is permanently dead:
+      //   2  = Incorrect Key (revoked / deleted)
+      //   16 = Access level of this key is not high enough
+      // Everything else (5 rate limit, 8 IP block, 9 API disabled, 13 inactive,
+      // 14 daily cap, 17 backend error, 18 paused) is temporary — the key will
+      // work again once the condition clears, so we must NOT nuke the row.
+      const PERMANENT_TORN_ERRORS = [2, 16]
+      const code = userData.error?.code
 
-      await supabase.from('secret_audit_log').insert({
-        torn_player_id: player_id,
-        action: 'cleared',
-        edge_function: 'auto-login',
-      })
+      if (PERMANENT_TORN_ERRORS.includes(code)) {
+        await supabase
+          .from('player_secrets')
+          .delete()
+          .eq('torn_player_id', player_id)
 
+        await supabase.from('secret_audit_log').insert({
+          torn_player_id: player_id,
+          action: 'cleared',
+          edge_function: 'auto-login',
+        })
+
+        return new Response(
+          JSON.stringify({ success: false, error: 'key_invalid', torn_error: userData.error }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      // Transient Torn failure — leave the encrypted row in place. The
+      // client keeps its session and retries on the next page load.
       return new Response(
-        JSON.stringify({ error: 'key_invalid', torn_error: userData.error }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ success: false, error: 'torn_unavailable', torn_error: userData.error }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -128,22 +159,6 @@ serve(async (req) => {
     const isSingle = !userData.married || userData.married.spouse_id === 0
     const hasIsland = userData.property === 'Private Island'
     const isDirector = userData.job && userData.job.job === 'Director'
-
-    // Fetch company stars if player has a company
-    let companyStars: number | null = null
-    if (userData.job?.company_id) {
-      try {
-        const companyRes = await fetch(
-          `https://api.torn.com/company/${userData.job.company_id}?selections=profile&key=${apiKey}`
-        )
-        const companyData = await companyRes.json()
-        if (companyData && !companyData.error && companyData.company?.rating) {
-          companyStars = companyData.company.rating
-        }
-      } catch (_) {
-        // Non-critical — skip if company API call fails
-      }
-    }
 
     await supabase.from('players').update({
       name: userData.name,
@@ -153,7 +168,6 @@ serve(async (req) => {
       company_name: userData.job?.company_name || null,
       company_role: userData.job?.job || null,
       company_type: userData.job?.company_type || null,
-      company_stars: companyStars,
       level: userData.level || null,
       age: userData.age || null,
       last_verified: new Date().toISOString(),
