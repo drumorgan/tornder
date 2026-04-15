@@ -11,6 +11,7 @@ export function renderLogin(container) {
         <p class="login-subtitle">Swipe your way through Torn City</p>
         <a href="https://www.torn.com/preferences.php#tab=api?step=addNewKey&user=basic,profile,properties,workstats&title=Tornder" target="_blank" rel="noopener" class="btn btn-primary create-key-btn">Create a Custom Key on Torn</a>
         <p class="create-key-help">Only shares your name, faction, company, property, and work stats. Nothing else.</p>
+        <a href="https://www.torn.com/preferences.php#tab=api" target="_blank" rel="noopener" class="btn btn-secondary find-key-btn">Already have a Tornder key? Find it on Torn &rarr;</a>
         <div class="form-group">
           <label for="api-key-input">Already have a key? Paste it below</label>
           <input type="text" id="api-key-input" placeholder="Paste your API key" autocomplete="off" />
