@@ -9,12 +9,14 @@ export function renderLogin(container) {
       <div class="login-card">
         <h2>Welcome to Tornder</h2>
         <p class="login-subtitle">Swipe your way through Torn City</p>
+        <a href="https://www.torn.com/preferences.php#tab=api?step=addNewKey&user=basic,profile,properties,workstats&title=Tornder" target="_blank" rel="noopener" class="btn btn-primary create-key-btn">Create a Custom Key on Torn</a>
+        <p class="create-key-help">Only shares your name, faction, company, property, and work stats. Nothing else.</p>
         <div class="form-group">
-          <label for="api-key-input">Torn API Key</label>
+          <label for="api-key-input">Already have a key? Paste it below</label>
           <input type="text" id="api-key-input" placeholder="Paste your API key" autocomplete="off" />
         </div>
         <button id="login-btn" class="btn btn-primary">Enter</button>
-        <p class="key-disclaimer">Need a key? <a href="https://www.torn.com/preferences.php#tab=api?step=addNewKey&user=basic,profile,properties,workstats&title=Tornder" target="_blank" rel="noopener">Click here to create a Custom Key</a> &mdash; it only shares your name, faction, company, property, and work stats info. Your key is stored so you stay logged in. You can revoke it anytime from your <a href="https://www.torn.com/preferences.php#tab=api" target="_blank" rel="noopener">Torn API settings</a>.</p>
+        <p class="key-disclaimer">Your key is stored encrypted server-side (AES-256) so you stay logged in. You can revoke it anytime from your <a href="https://www.torn.com/preferences.php#tab=api" target="_blank" rel="noopener">Torn API settings</a>.</p>
       </div>
 
       <div class="tos-box">
