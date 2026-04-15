@@ -105,6 +105,13 @@ async function boot() {
     if (data.success) {
       showToast(`Welcome back, ${data.name}!`, 'success');
       navigate('profile');
+    } else if (data.error === 'torn_unavailable') {
+      // Transient Torn outage (rate limit, 5xx, paused / inactive key). The
+      // session is still good on our side — keep localStorage intact so the
+      // next page load can retry. Previously ANY non-success wiped the
+      // session and forced the user to re-enter their API key.
+      showToast('Torn API is busy — try again in a moment.', 'info');
+      navigate('login');
     } else {
       clearSession();
       if (data.error === 'key_invalid') {
@@ -115,6 +122,9 @@ async function boot() {
       navigate('login');
     }
   } catch (err) {
+    // Network blip between the browser and our edge function. Leave the
+    // stored session alone — re-prompting for the API key over a flaky
+    // connection is the wrong answer.
     showToast(`Connection error: ${err.message}`);
     navigate('login');
   }
