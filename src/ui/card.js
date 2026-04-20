@@ -6,7 +6,7 @@ const COMPANY_TYPES = {
   17: 'Zoo', 18: 'Firework Stand', 19: 'Property Broker', 20: 'Furniture Store',
   21: 'Gas Station', 22: 'Nightclub', 23: 'Music Store', 24: 'Gents Strip Club',
   25: 'Pub', 26: 'Restaurant', 27: 'Oil Rig', 28: 'Fitness Center',
-  29: 'Mechanic Shop', 30: 'Amusement Park', 31: 'Lingerie Store',
+  29: 'Amusement Park', 30: 'Mechanic Shop', 31: 'Lingerie Store',
   32: 'Meat Warehouse', 33: 'Farm', 34: 'Software Corporation',
   35: 'Ladies Strip Club', 36: 'Private Security Firm', 37: 'Mining Corporation',
   38: 'Detective Agency', 39: 'Logistics Management',
