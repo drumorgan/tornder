@@ -24,7 +24,7 @@ export function createCard(player, category) {
   card.dataset.playerId = player.torn_player_id;
 
   const categoryIcon = { marriage: '\u{1F48D}', island: '\u{1F3DD}\uFE0F', company: '\u{1F4BC}', train: '\u{1F3CB}\uFE0F' }[category];
-  const categoryColor = { marriage: '#e94560', island: '#0ea5e9', company: '#f59e0b', train: '#10b981' }[category] || 'var(--accent)';
+  const categoryColor = { marriage: '#e05545', island: '#4a7fb5', company: '#c9a84c', train: '#4db88e' }[category] || 'var(--accent)';
   const detail = getCategoryDetail(player, category);
   const companyTypeName = player.company_type ? COMPANY_TYPES[player.company_type] : null;
 

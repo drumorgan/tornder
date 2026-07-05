@@ -6,26 +6,47 @@
 }
 
 :root {
-  --bg: #1a1a2e;
-  --bg-card: #16213e;
-  --bg-input: #0f3460;
-  --accent: #3de8c8;        /* Tornder teal — fresh, modern matchmaker */
-  --accent-hover: #6eedce;
-  --accent-fg: #0b1f2b;     /* dark foreground for text on accent bg */
-  --text: #eee;
-  --text-muted: #999;
-  --success: #2ecc71;
-  --radius: 12px;
+  /* Palazzo del Pompino theme — matched to girovagabondo.com */
+  --bg: #0b0d14;
+  --bg-card: #161926;
+  --bg-card-warm: #1a1c28;
+  --bg-input: #111421;
+  --accent: #c9a84c;        /* Palazzo antique gold */
+  --accent-hover: #e8cc82;
+  --accent-fg: #0b0d14;     /* dark foreground for text on accent bg */
+  --text: #f0e8d5;
+  --text-muted: rgba(240, 232, 213, 0.55);
+  --border: rgba(180, 145, 70, 0.18);
+  --border-strong: rgba(201, 168, 76, 0.4);
+  --success: #4db88e;
+  --danger: #e05545;
+  --radius: 4px;
+  --font-display: 'Cinzel', 'Times New Roman', serif;
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 html, body {
   height: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-body);
+  font-weight: 300;
   background: var(--bg);
   color: var(--text);
   overflow-x: hidden;
   -webkit-user-select: none;
   user-select: none;
+}
+
+/* Subtle film-grain overlay across the whole page */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 300;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
 }
 
 #app {
@@ -36,27 +57,45 @@ html, body {
 
 /* === Header === */
 #app-header {
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1rem 0.6rem;
   text-align: center;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid var(--border);
+}
+
+.logo-eyebrow {
+  font-family: var(--font-display);
+  font-size: 0.55rem;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--accent);
+  opacity: 0.8;
+  margin-bottom: 0.3rem;
 }
 
 .logo {
-  font-size: 1.3rem;
-  color: var(--accent);
-  letter-spacing: 2px;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.5rem;
+  color: var(--accent-hover);
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.5), 0 0 40px rgba(201, 168, 76, 0.15);
 }
 
 .logo-subtitle {
-  font-size: 0.8rem;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 0.95rem;
   color: var(--text-muted);
   margin-top: 0.15rem;
 }
 
 .logo-credit {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  margin-top: 0.2rem;
+  font-family: var(--font-display);
+  font-size: 0.55rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: rgba(240, 232, 213, 0.35);
+  margin-top: 0.3rem;
 }
 
 .giro-link {
@@ -82,14 +121,23 @@ html, body {
 }
 
 .nav-btn {
+  font-family: var(--font-display);
   background: transparent;
-  border: 1px solid rgba(255,255,255,0.2);
+  border: 1px solid var(--border);
   color: var(--text-muted);
-  padding: 0.4rem 1rem;
+  padding: 0.45rem 1rem;
   border-radius: 20px;
-  font-size: 0.85rem;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
   cursor: pointer;
   transition: all 0.2s;
+}
+
+.nav-btn:hover:not(.active) {
+  border-color: var(--border-strong);
+  color: var(--text);
 }
 
 .nav-btn.active {
@@ -125,7 +173,8 @@ html, body {
 }
 
 .login-card {
-  background: var(--bg-card);
+  background: linear-gradient(180deg, var(--bg-card-warm) 0%, var(--bg-card) 100%);
+  border: 1px solid var(--border);
   padding: 2rem;
   border-radius: var(--radius);
   width: 100%;
@@ -133,11 +182,16 @@ html, body {
 }
 
 .login-card h2 {
-  color: var(--accent);
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--accent-hover);
   margin-bottom: 0.25rem;
 }
 
 .login-subtitle {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1.05rem;
   color: var(--text-muted);
   margin-bottom: 1.5rem;
 }
@@ -162,11 +216,12 @@ html, body {
 .form-group input {
   width: 100%;
   padding: 0.75rem;
-  border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 2px;
+  border: 1px solid var(--border);
   background: var(--bg-input);
   color: var(--text);
   font-size: 1rem;
+  transition: border-color 0.3s ease;
 }
 
 .form-group input:focus {
@@ -231,7 +286,7 @@ html, body {
 .btn {
   display: inline-block;
   padding: 0.75rem 1.5rem;
-  border-radius: 8px;
+  border-radius: 2px;
   border: none;
   font-size: 1rem;
   cursor: pointer;
@@ -244,24 +299,37 @@ html, body {
 }
 
 .btn-primary {
-  background: var(--accent);
+  font-family: var(--font-display);
+  background: linear-gradient(180deg, var(--accent-hover) 0%, var(--accent) 100%);
   color: var(--accent-fg);
   width: 100%;
   font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--accent-hover);
+  filter: brightness(1.08);
+  box-shadow: 0 6px 24px rgba(201, 168, 76, 0.25);
 }
 
 .btn-secondary {
-  background: rgba(255,255,255,0.1);
-  color: var(--text);
+  font-family: var(--font-display);
+  background: transparent;
+  border: 1px solid rgba(240, 232, 213, 0.2);
+  color: var(--text-muted);
   width: 100%;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: rgba(255,255,255,0.2);
+  border-color: var(--border-strong);
+  color: var(--accent);
+  background: rgba(201, 168, 76, 0.08);
 }
 
 /* === Avatar === */
@@ -287,7 +355,8 @@ html, body {
 
 /* === Profile Screen === */
 .profile-card {
-  background: var(--bg-card);
+  background: linear-gradient(180deg, var(--bg-card-warm) 0%, var(--bg-card) 100%);
+  border: 1px solid var(--border);
   padding: 1.5rem;
   border-radius: var(--radius);
 }
@@ -300,7 +369,9 @@ html, body {
 }
 
 .profile-header h2 {
-  color: var(--accent);
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--accent-hover);
   margin-bottom: 0.15rem;
 }
 
@@ -310,7 +381,9 @@ html, body {
 }
 
 .profile-card h2 {
-  color: var(--accent);
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--accent-hover);
   margin-bottom: 1rem;
 }
 
@@ -324,7 +397,7 @@ html, body {
 .stat-item {
   flex: 1;
   background: var(--bg);
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 0.75rem 0.5rem;
   text-align: center;
@@ -332,18 +405,20 @@ html, body {
 
 .stat-value {
   display: block;
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: var(--accent);
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--accent-hover);
 }
 
 .stat-label {
   display: block;
-  font-size: 0.65rem;
+  font-family: var(--font-display);
+  font-size: 0.55rem;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-top: 0.2rem;
+  letter-spacing: 0.18em;
+  margin-top: 0.25rem;
 }
 
 .stat-clickable {
@@ -369,6 +444,7 @@ html, body {
 
 .stat-list-content {
   background: var(--bg-card);
+  border: 1px solid var(--border-strong);
   padding: 1.5rem;
   border-radius: var(--radius);
   width: 90%;
@@ -379,7 +455,9 @@ html, body {
 }
 
 .stat-list-content h3 {
-  color: var(--accent);
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--accent-hover);
   margin-bottom: 1rem;
   text-align: center;
 }
@@ -521,18 +599,18 @@ html, body {
 }
 
 .btn-danger {
-  background: #8b2020;
-  color: #fff;
-  border: 1px solid #a03030;
+  background: rgba(224, 85, 69, 0.12);
+  color: #f0968a;
+  border: 1px solid var(--danger);
   padding: 0.5rem 1.25rem;
-  border-radius: 8px;
+  border-radius: 2px;
   cursor: pointer;
   font-size: 0.85rem;
   transition: background 0.2s;
 }
 
 .btn-danger:hover {
-  background: #a52a2a;
+  background: rgba(224, 85, 69, 0.25);
 }
 
 /* === Browse Screen === */
@@ -544,20 +622,25 @@ html, body {
 
 .tab-btn {
   flex: 1;
-  padding: 0.6rem 0.5rem;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.15);
+  font-family: var(--font-display);
+  padding: 0.65rem 0.4rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
   color: var(--text-muted);
-  border-radius: 8px;
-  font-size: 0.85rem;
+  border-radius: 2px;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .tab-btn.active {
-  background: var(--accent);
-  color: var(--accent-fg);
-  border-color: var(--accent);
+  background: rgba(201, 168, 76, 0.12);
+  color: var(--accent-hover);
+  border-color: var(--border-strong);
+  box-shadow: inset 0 -2px 0 var(--accent);
 }
 
 .deck-container {
@@ -589,7 +672,8 @@ html, body {
 
 /* === Player Card === */
 .player-card {
-  background: var(--bg-card);
+  background: linear-gradient(180deg, var(--bg-card-warm) 0%, var(--bg-card) 100%);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   width: 100%;
   max-width: 360px;
@@ -597,8 +681,12 @@ html, body {
   cursor: grab;
   touch-action: pan-y;
   position: relative;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  transition: box-shadow 0.2s;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.player-card:hover {
+  border-color: var(--border-strong);
 }
 
 .player-card:active {
@@ -625,8 +713,10 @@ html, body {
 }
 
 .card-name {
-  font-size: 1.3rem;
-  color: var(--accent);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.25rem;
+  color: var(--accent-hover);
 }
 
 .card-company-type {
@@ -674,11 +764,13 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(61, 232, 200, 0.9);
+  background: rgba(201, 168, 76, 0.92);
   border-radius: var(--radius);
-  font-size: 1.5rem;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
   font-weight: 700;
-  color: #0b1f2b;
+  letter-spacing: 0.08em;
+  color: var(--accent-fg);
 }
 
 /* Swipe hints */
@@ -746,6 +838,7 @@ html, body {
 
 .match-popup-content {
   background: var(--bg-card);
+  border: 1px solid var(--border-strong);
   padding: 2rem;
   border-radius: var(--radius);
   text-align: center;
@@ -753,9 +846,12 @@ html, body {
 }
 
 .match-popup-content h2 {
-  color: var(--accent);
-  font-size: 1.8rem;
+  font-family: var(--font-display);
+  font-weight: 900;
+  color: var(--accent-hover);
+  font-size: 1.7rem;
   margin-bottom: 0.75rem;
+  text-shadow: 0 0 40px rgba(201, 168, 76, 0.2);
 }
 
 .match-popup-content p {
@@ -805,18 +901,21 @@ html, body {
 }
 
 .toast-error {
-  background: #c0392b;
-  color: white;
+  background: #7a2a20;
+  border: 1px solid var(--danger);
+  color: #f6ddd8;
 }
 
 .toast-success {
-  background: #27ae60;
-  color: white;
+  background: #1d5240;
+  border: 1px solid var(--success);
+  color: #dcf2e8;
 }
 
 .toast-info {
-  background: #2980b9;
-  color: white;
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
 }
 
 /* === Card Level === */
@@ -828,7 +927,7 @@ html, body {
 /* === TOS Box === */
 .tos-box {
   background: var(--bg-card);
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 1.25rem;
   margin-top: 1rem;
@@ -837,8 +936,12 @@ html, body {
 }
 
 .tos-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
   color: var(--accent);
-  font-size: 1rem;
   margin-bottom: 1rem;
 }
 
@@ -867,8 +970,8 @@ html, body {
 .crosslink-box {
   margin: 2rem 1rem 1.5rem;
   padding: 1.5rem 1.5rem 1.25rem;
-  background: var(--bg-card);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: linear-gradient(180deg, var(--bg-card-warm) 0%, var(--bg-card) 100%);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   text-align: center;
   color: var(--text-muted);
@@ -876,11 +979,13 @@ html, body {
 }
 
 .crosslink-label {
-  font-size: 0.7rem;
+  font-family: var(--font-display);
+  font-size: 0.6rem;
   text-transform: uppercase;
-  letter-spacing: 0.18em;
-  color: var(--text-muted);
-  margin-bottom: 0.85rem;
+  letter-spacing: 0.35em;
+  color: var(--accent);
+  opacity: 0.7;
+  margin-bottom: 1rem;
 }
 
 .crosslink-list {
@@ -900,7 +1005,7 @@ html, body {
 
 /* Target-app colors — each Giro tool has its own distinct accent */
 .crosslink-valigia   { color: #e8c84a; }  /* Valigia gold */
-.crosslink-happyjump { color: #e94560; }  /* HappyJump coral */
+.crosslink-happyjump { color: #e05545; }  /* HappyJump red */
 .crosslink-tornder   { color: #3de8c8; }  /* Tornder teal */
 .crosslink-factionevent { color: #b89cff; }  /* Faction Event lavender */
 .crosslink-yoink     { color: #c0c4cc; }  /* Yoink neutral */
@@ -913,7 +1018,7 @@ html, body {
   margin: 1.5rem auto 0.75rem;
   border-radius: 50%;
   overflow: hidden;
-  border: 2px solid rgba(255,255,255,0.15);
+  border: 1px solid var(--border-strong);
   transition: transform 0.15s ease, border-color 0.15s ease;
 }
 
@@ -941,14 +1046,18 @@ html, body {
 }
 
 .footer-note {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  letter-spacing: 0.05em;
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  color: var(--accent);
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
 }
 
 /* === Stat Deck Overlay (Interested in You swipe) === */
 .stat-deck-content {
   background: var(--bg-card);
+  border: 1px solid var(--border-strong);
   padding: 1.5rem;
   border-radius: var(--radius);
   width: 90%;
